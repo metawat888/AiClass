@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Classroom Whiteboard — กระดานแสดงความคิดเห็นแยกตามรหัสห้อง</title>
+  <title>Classroom Whiteboard — กระดานแสดงความคิดเห็นออนไลน์</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1240/gun.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,12 +20,13 @@
       color: #0f172a;
       overflow-x: hidden;
     }
-    /* Minimalist Whiteboard Dot Grid */
+
+    /* Upgraded Whiteboard Dot & Grid Surfaces */
     .whiteboard-canvas {
       background-color: #f8fafc;
       background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
       background-size: 28px 28px;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.35s ease;
     }
     .whiteboard-canvas.theme-warm {
       background-color: #fffdf7;
@@ -40,34 +41,50 @@
       background-image: radial-gradient(#bfd8f5 1.5px, transparent 1.5px);
     }
     .whiteboard-canvas.theme-dark {
-      background-color: #0b0f1c;
-      background-image: radial-gradient(#263044 1.5px, transparent 1.5px);
+      background-color: #090d1a;
+      background-image:
+        radial-gradient(circle at 18% 20%, rgba(88, 72, 255, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 82% 75%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+        radial-gradient(#242f46 1.5px, transparent 1.5px);
+      background-size: 100% 100%, 100% 100%, 28px 28px;
     }
 
     /* Dark Login Screen Glow */
     .login-bg-surface {
-      background: radial-gradient(circle at 50% 35%, #161d33 0%, #070a14 70%);
+      background:
+        radial-gradient(circle at 50% 25%, rgba(99, 91, 255, 0.22) 0%, transparent 55%),
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.1) 0%, transparent 45%),
+        #060913;
     }
     .login-card-surface {
-      background-color: #1c2230;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.75), 0 0 50px -15px rgba(91, 72, 255, 0.18);
+      background: linear-gradient(180deg, rgba(30, 37, 54, 0.96) 0%, rgba(22, 28, 42, 0.98) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 28px 80px -12px rgba(0, 0, 0, 0.8), 0 0 60px -15px rgba(91, 72, 255, 0.25);
     }
 
-    /* Sticky Note Card Styling */
+    /* Upgraded Sticky Note Card Styling */
     .note-card {
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14), 0 4px 10px -4px rgba(15, 23, 42, 0.08);
-      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+      box-shadow: 0 14px 32px -8px rgba(2, 6, 23, 0.22), 0 4px 12px -4px rgba(2, 6, 23, 0.1);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
     }
     .note-card:hover {
-      box-shadow: 0 20px 30px -8px rgba(15, 23, 42, 0.22), 0 8px 16px -6px rgba(15, 23, 42, 0.12);
+      transform: translateY(-3px);
+      box-shadow: 0 22px 40px -10px rgba(2, 6, 23, 0.32), 0 8px 18px -6px rgba(2, 6, 23, 0.14);
     }
     .note-card.dragging {
       cursor: grabbing !important;
-      transform: scale(1.03) rotate(1deg);
-      box-shadow: 0 28px 45px -10px rgba(0, 0, 0, 0.35);
+      transform: scale(1.03) rotate(1deg) !important;
+      box-shadow: 0 32px 55px -12px rgba(0, 0, 0, 0.45) !important;
       z-index: 999 !important;
-      transition: none;
+      transition: none !important;
+    }
+
+    /* Responsive Clean Grid Layout for Cards when in Grid Mode */
+    .notes-grid-mode {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(305px, 1fr));
+      gap: 1.25rem;
+      align-items: start;
     }
 
     @keyframes popIn {
@@ -81,7 +98,7 @@
     /* Reaction Button Pop & Floating Burst Animations */
     @keyframes reactionBounce {
       0% { transform: scale(1); }
-      30% { transform: scale(1.38) rotate(-8deg); }
+      30% { transform: scale(1.42) rotate(-8deg); }
       60% { transform: scale(0.92) rotate(4deg); }
       100% { transform: scale(1) rotate(0deg); }
     }
@@ -107,7 +124,7 @@
       position: fixed;
       pointer-events: none;
       z-index: 9999;
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       user-select: none;
       filter: drop-shadow(0 4px 8px rgba(15, 23, 42, 0.18));
       animation: floatUpParticle 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -116,10 +133,10 @@
     @keyframes ringRipple {
       0% {
         transform: scale(0.5);
-        opacity: 0.8;
+        opacity: 0.85;
       }
       100% {
-        transform: scale(2.4);
+        transform: scale(2.5);
         opacity: 0;
       }
     }
@@ -136,11 +153,11 @@
 </head>
 <body class="min-h-screen flex flex-col select-none">
 
-  <!-- DARK LOGIN SCREEN OVERLAY (Matches Reference Image) -->
-  <div id="loginScreenOverlay" class="fixed inset-0 z-50 login-bg-surface flex items-center justify-center p-4">
-    <div class="login-card-surface rounded-[28px] max-w-[500px] w-full p-7 sm:p-10 animate-pop">
+  <!-- DARK LOGIN SCREEN OVERLAY (Matches Reference Image + Active Rooms Quick Selector) -->
+  <div id="loginScreenOverlay" class="fixed inset-0 z-50 login-bg-surface flex items-center justify-center p-4 overflow-y-auto">
+    <div class="login-card-surface rounded-[28px] max-w-[500px] w-full p-7 sm:p-10 animate-pop my-auto">
       <!-- Top Purple School Icon Badge -->
-      <div class="w-16 h-16 rounded-[20px] bg-[#665df5] shadow-[0_8px_25px_rgba(102,93,245,0.45)] flex items-center justify-center mx-auto mb-5 text-3xl" title="Classroom Whiteboard">
+      <div class="w-16 h-16 rounded-[20px] bg-gradient-to-br from-[#6e64ff] to-[#4f42e8] shadow-[0_10px_28px_rgba(102,93,245,0.5)] flex items-center justify-center mx-auto mb-5 text-3xl" title="Classroom Whiteboard">
         🏫
       </div>
 
@@ -148,12 +165,12 @@
       <h2 class="text-2xl sm:text-[28px] font-bold text-white text-center tracking-tight">
         เข้าสู่ห้องเรียน
       </h2>
-      <p class="text-xs sm:text-sm text-[#94a3b8] text-center mt-2 mb-7">
+      <p class="text-xs sm:text-sm text-[#94a3b8] text-center mt-2 mb-6">
         กรอกรหัสห้องและชื่อเล่นเพื่อเข้าร่วมกระดานกิจกรรมในชั้นเรียน
       </p>
 
       <!-- Login Form -->
-      <form id="formDarkLogin" class="space-y-5">
+      <form id="formDarkLogin" class="space-y-4">
         <div>
           <label for="loginRoomInput" class="block text-xs sm:text-sm font-bold text-[#e2e8f0] mb-2">
             รหัสห้องเรียน (Room Code) *
@@ -164,6 +181,14 @@
             placeholder="เช่น 101, Math101, ม.2/1..."
             class="w-full px-4 py-3.5 rounded-2xl bg-[#0c1018] border border-[#2a3346] text-white placeholder-[#64748b] text-sm sm:text-base font-medium focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30 transition"
           />
+        </div>
+
+        <!-- Saved / Active Rooms Quick Chips -->
+        <div id="loginSavedRoomsBox" class="pt-0.5">
+          <div class="text-[11px] font-semibold text-slate-400 mb-1.5">ห้องเรียนล่าสุด (คลิกเพื่อเลือก):</div>
+          <div id="loginSavedRoomsList" class="flex flex-wrap gap-1.5">
+            <!-- Populated by JS -->
+          </div>
         </div>
 
         <div>
@@ -182,11 +207,11 @@
           กรุณากรอกรหัสห้องเรียนและชื่อเล่นของคุณให้ครบถ้วน
         </p>
 
-        <div class="pt-1">
+        <div class="pt-2">
           <button
             id="btnSubmitDarkLogin"
             type="submit"
-            class="w-full py-4 rounded-2xl bg-[#5848ff] hover:bg-[#4b3bf5] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-[0_10px_28px_rgba(88,72,255,0.48)] transition flex items-center justify-center gap-2"
+            class="w-full py-4 rounded-2xl bg-gradient-to-r from-[#5848ff] to-[#6859ff] hover:from-[#4b3bf5] hover:to-[#5848ff] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-[0_10px_28px_rgba(88,72,255,0.5)] transition flex items-center justify-center gap-2"
           >
             <span>🚀</span>
             <span>เข้าสู่ห้องเรียน</span>
@@ -196,13 +221,13 @@
     </div>
   </div>
 
-  <!-- Minimal Floating Top Bar (Dark Cohesive Header) -->
-  <header class="sticky top-0 z-30 bg-[#121726]/95 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3">
+  <!-- Minimal Floating Top Bar (Sleek Dark Glass Header) -->
+  <header class="sticky top-0 z-30 bg-[#0f1422]/90 backdrop-blur-xl border-b border-slate-800/90 px-4 sm:px-8 py-3">
     <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
 
       <!-- Editable Board Title & Subtitle -->
       <div class="flex items-center gap-3 min-w-0">
-        <div class="w-10 h-10 rounded-2xl bg-[#5848ff] text-white flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0 text-lg">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#665df5] to-[#4b3bf5] text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0 text-lg">
           🏫
         </div>
         <div class="min-w-0">
@@ -215,6 +240,9 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </button>
+            <span id="postCountHeaderBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              0 โพสต์
+            </span>
           </div>
           <p id="boardSubtitleText" class="text-xs text-slate-400 truncate">
             คลิกที่โน้ตเพื่อแสดงความคิดเห็นต่อ กดไลก์ กดหัวใจ แนบลิงก์ YouTube รูปภาพ หรือไฟล์ได้ครบครัน
@@ -222,7 +250,7 @@
         </div>
       </div>
 
-      <!-- Right Controls: Active User & Room Switcher, Save Button, Theme, Arrange, Add Note -->
+      <!-- Right Controls: Active User & Room Switcher, Save Button, Layout Mode, Theme, Add Note -->
       <div class="flex items-center flex-wrap gap-2 sm:gap-2.5">
 
         <!-- Active Student Badge + Open Login Screen to Switch Room/Nickname -->
@@ -263,16 +291,16 @@
           <button type="button" data-theme="sky" class="theme-dot w-4 h-4 rounded-full bg-sky-100 border border-sky-400" title="พื้นหลังสีฟ้าอ่อน"></button>
         </div>
 
-        <!-- Auto Arrange Grid Button -->
-        <button id="btnArrangeGrid" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition" title="จัดเรียงโน้ตให้เป็นระเบียบ">
-          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <!-- Toggle Grid / Freeform & Auto Arrange Button -->
+        <button id="btnArrangeGrid" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition" title="สลับโหมดจัดเรียงการ์ดอัตโนมัติ / ลากวางอิสระ">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
           </svg>
           <span class="hidden xl:inline">จัดเรียงโน้ต</span>
         </button>
 
         <!-- Primary Add Note CTA -->
-        <button id="btnOpenNewPostModal" type="button" class="px-4 py-2 rounded-xl bg-[#5848ff] hover:bg-[#4b3bf5] active:scale-[0.99] text-white font-semibold text-xs sm:text-sm shadow-md shadow-indigo-500/30 flex items-center gap-1.5 transition">
+        <button id="btnOpenNewPostModal" type="button" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#5848ff] to-[#6c5eff] hover:from-[#4b3bf5] hover:to-[#5848ff] active:scale-[0.99] text-white font-semibold text-xs sm:text-sm shadow-md shadow-indigo-500/30 flex items-center gap-1.5 transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
           </svg>
@@ -311,12 +339,12 @@
     </div>
 
     <!-- Notes Layer -->
-    <div id="notesLayer" class="relative w-full min-h-[calc(100vh-65px)] p-4 sm:p-8">
+    <div id="notesLayer" class="relative w-full max-w-[1600px] mx-auto min-h-[calc(100vh-65px)] p-4 sm:p-8 notes-grid-mode">
       <!-- Dynamic sticky notes rendered here -->
     </div>
 
     <!-- Floating Bottom-Right Quick Add Button -->
-    <button id="btnFloatingAdd" type="button" class="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-2xl bg-[#5848ff] hover:bg-[#4b3bf5] text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition hover:scale-105 active:scale-95" title="เพิ่มความคิดเห็นใหม่">
+    <button id="btnFloatingAdd" type="button" class="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#665df5] to-[#4b3bf5] hover:from-[#5848ff] hover:to-[#4335e0] text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition hover:scale-105 active:scale-95" title="เพิ่มความคิดเห็นใหม่">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
@@ -324,7 +352,7 @@
   </main>
 
   <!-- MODAL 1: Create / Edit Note on Whiteboard (Supports Text, Image Upload/URL, YouTube, External Links, Files) -->
-  <div id="modalPost" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="modalPost" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#1c2230] text-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 id="modalPostHeading" class="text-base sm:text-lg font-bold text-white">แปะโน้ตแสดงความคิดเห็น</h3>
@@ -348,7 +376,7 @@
           <textarea id="inputNoteText" rows="3" placeholder="เขียนความคิดเห็น ไอเดีย หรือวางลิงก์ใดๆ ที่นี่ได้เลย..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0c1018] border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
         </div>
 
-        <!-- Media & Attachments Section (Image Upload, Image URL, YouTube Link, Web/File Link) -->
+        <!-- Media & Attachments Section -->
         <div class="p-3.5 rounded-2xl bg-[#121723] border border-slate-800 space-y-3">
           <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
             <span>📎 เพิ่มรูปภาพ / วิดีโอ YouTube / ลิงก์เว็บไซต์หรือไฟล์</span>
@@ -425,8 +453,8 @@
     </div>
   </div>
 
-  <!-- MODAL 2: Note Detail & Replies (คลิกเข้าไปแสดงความคิดเห็นต่อได้ + กดไลก์/หัวใจพร้อม Animation) -->
-  <div id="modalNoteDetail" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <!-- MODAL 2: Note Detail & Replies -->
+  <div id="modalNoteDetail" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-pop">
 
       <!-- Note Header inside Modal -->
@@ -507,7 +535,7 @@
   </div>
 
   <!-- MODAL 3: Edit Board Title, Room Code Switcher & Cloud Settings -->
-  <div id="modalBoardSettings" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="modalBoardSettings" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-[#1c2230] text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-base font-bold text-white">เข้ารหัสห้อง / ตั้งค่ากระดานกลุ่ม</h3>
@@ -549,7 +577,7 @@
         </div>
 
         <div>
-          <label for="inputCloudDbUrl" class="block text-[11px] font-semibold text-slate-400 mb-1">Firebase Realtime DB URL (ไม่บังคับ)</label>
+          <label for="inputCloudDbUrl" class="block text-[11px] font-semibold text-slate-400 mb-1">Firebase Realtime DB URL (ไม่บังคับ — มีระบบ Cloud อัตโนมัติให้แล้ว)</label>
           <input id="inputCloudDbUrl" type="url" placeholder="https://your-project-default-rtdb.firebaseio.com" class="w-full px-3 py-1.5 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-indigo-500" />
         </div>
       </div>
@@ -628,6 +656,7 @@
       const LS_LEGACY_V2 = 'WHITEBOARD_SINGLE_PERMANENT_STATE_V2';
       const LS_NICKNAME_KEY = 'WHITEBOARD_LAST_NICKNAME_V2';
       const LS_SYNC_CFG_KEY = 'WHITEBOARD_CLOUD_SYNC_CFG_V3';
+      const LS_ACTIVE_SESSION_KEY = 'WHITEBOARD_HAS_ACTIVE_SESSION_V5';
       const IDB_NAME = 'ClassWhiteboardPermanentDB_V3';
       const IDB_STORE = 'roomStore';
       const IDB_MEDIA_STORE = 'mediaStore';
@@ -653,6 +682,8 @@
           boardTitle: `กระดานแสดงความคิดเห็น (ห้อง ${roomCode})`,
           boardSubtitle: 'คลิกที่โน้ตเพื่อแสดงความคิดเห็นต่อ กดไลก์ กดหัวใจ แนบลิงก์ YouTube รูปภาพ หรือไฟล์ได้ครบครัน',
           theme: 'dark',
+          layoutMode: 'grid', // 'grid' (clean responsive layout) or 'freeform' (drag anywhere)
+          cloudBlobId: '',
           updatedAt: 0,
           deletedIds: [],
           posts: []
@@ -670,6 +701,7 @@
       let pendingDeleteAction = null;
       let gunInstance = null;
       let gunRoomNode = null;
+      let ntfyEventSource = null;
 
       function migrateLegacyStorageIfNeeded() {
         try {
@@ -694,7 +726,7 @@
             const parsed = JSON.parse(raw);
             if (parsed && parsed.roomCode) {
               if (!Array.isArray(parsed.recentRooms)) {
-                parsed.recentRooms = [parsed.roomCode, 'กลุ่ม 1', 'กลุ่ม 2', 'กลุ่ม 3'];
+                parsed.recentRooms = [parsed.roomCode, '101', 'กลุ่ม 1', 'กลุ่ม 2'];
               }
               return parsed;
             }
@@ -713,7 +745,7 @@
         if (!Array.isArray(syncConfig.recentRooms)) syncConfig.recentRooms = [];
         if (!syncConfig.recentRooms.includes(clean)) {
           syncConfig.recentRooms.unshift(clean);
-          syncConfig.recentRooms = syncConfig.recentRooms.slice(0, 8);
+          syncConfig.recentRooms = syncConfig.recentRooms.slice(0, 10);
         }
       }
 
@@ -727,7 +759,17 @@
         return LS_ROOM_PREFIX + String(roomCode || '101').trim().toUpperCase();
       }
 
-      // 1. Bulletproof Multi-Layer Persistence
+      //Deterministic hex topic name for ntfy.sh so Thai/special characters in room codes work 100% reliably
+      function getNtfyTopicForRoom(roomCode) {
+        const clean = String(roomCode || '101').trim().toUpperCase();
+        let hex = '';
+        for (let i = 0; i < clean.length; i++) {
+          hex += clean.charCodeAt(i).toString(16);
+        }
+        return 'cb_v5_room_' + hex.slice(0, 40);
+      }
+
+      // 1. Bulletproof Multi-Layer Persistence (NEVER overwrites before reading!)
       function loadRoomFromLocalStorage(roomCode) {
         const key = getRoomStorageKey(roomCode);
         try {
@@ -737,6 +779,7 @@
             if (parsed && Array.isArray(parsed.posts)) {
               if (!Array.isArray(parsed.deletedIds)) parsed.deletedIds = [];
               if (!parsed.theme) parsed.theme = 'dark';
+              if (!parsed.layoutMode) parsed.layoutMode = 'grid';
               return parsed;
             }
           }
@@ -744,6 +787,15 @@
           console.warn('LocalStorage read warning:', err);
         }
         return createDefaultRoomState(roomCode);
+      }
+
+      function getRoomPostCount(roomCode) {
+        try {
+          const r = loadRoomFromLocalStorage(roomCode);
+          return (r && Array.isArray(r.posts)) ? r.posts.length : 0;
+        } catch (e) {
+          return 0;
+        }
       }
 
       function openIndexedDB() {
@@ -771,26 +823,36 @@
         const key = getRoomStorageKey(roomCode);
         try {
           const db = await openIndexedDB();
-          if (!db) return;
-          const tx = db.transaction(IDB_STORE, 'readonly');
-          const store = tx.objectStore(IDB_STORE);
-          const getReq = store.get(key);
-          getReq.onsuccess = () => {
-            if (roomCode !== syncConfig.roomCode) return;
-            if (getReq.result && Array.isArray(getReq.result.posts)) {
-              if (mergeIncomingState(getReq.result)) {
-                renderBoard();
-                if (activeDetailPostId) renderNoteDetailModal(activeDetailPostId);
+          if (!db) return false;
+          return await new Promise(resolve => {
+            const tx = db.transaction(IDB_STORE, 'readonly');
+            const store = tx.objectStore(IDB_STORE);
+            const getReq = store.get(key);
+            getReq.onsuccess = () => {
+              if (roomCode !== syncConfig.roomCode) {
+                resolve(false);
+                return;
               }
-            }
-          };
+              if (getReq.result && Array.isArray(getReq.result.posts)) {
+                const didChange = mergeIncomingState(getReq.result);
+                if (didChange) {
+                  renderBoard();
+                  if (activeDetailPostId) renderNoteDetailModal(activeDetailPostId);
+                }
+                resolve(didChange);
+              } else {
+                resolve(false);
+              }
+            };
+            getReq.onerror = () => resolve(false);
+          });
         } catch (err) {
-          console.warn('IndexedDB hydration skipped:', err);
+          return false;
         }
       }
 
+      // FIXED switchRoom: Never saves an unhydrated or wrong room over the target room!
       async function switchRoom(newRoomCode) {
-        await saveLocalOnly();
         const cleanCode = (newRoomCode || '').trim() || '101';
         syncConfig.roomCode = cleanCode;
         addRoomToHistory(cleanCode);
@@ -799,13 +861,18 @@
         activeDetailPostId = null;
         document.getElementById('modalNoteDetail').classList.add('hidden');
 
+        // Load from LocalStorage first, then merge from IndexedDB, then pull from Cloud!
         state = loadRoomFromLocalStorage(cleanCode);
         renderBoard();
         await hydrateRoomFromIndexedDB(cleanCode);
-        subscribeGunRoom();
-        pullFromCloudRest();
+        renderBoard();
 
-        showToast(`เข้าสู่ห้อง "${cleanCode}" เรียบร้อยแล้ว`);
+        // Connect live cloud streams for this room
+        subscribeGunRoom();
+        subscribeNtfyRoomStream(cleanCode);
+        await pullFromCloudAllEngines();
+
+        showToast(`เข้าสู่ห้อง "${cleanCode}" เรียบร้อยแล้ว (${state.posts.length} โพสต์)`);
       }
 
       function mergeIncomingState(remote) {
@@ -826,6 +893,11 @@
         const beforeFilterLen = state.posts.length;
         state.posts = state.posts.filter(p => p && p.id && !deletedSet.has(p.id));
         if (state.posts.length !== beforeFilterLen) changed = true;
+
+        if (remote.cloudBlobId && !state.cloudBlobId) {
+          state.cloudBlobId = remote.cloudBlobId;
+          changed = true;
+        }
 
         if ((remote.updatedAt || 0) > (state.updatedAt || 0)) {
           if (remote.boardTitle && remote.boardTitle !== state.boardTitle) {
@@ -916,7 +988,7 @@
           try {
             const compactState = Object.assign({}, state, {
               posts: state.posts.map(p => {
-                if (p.image && p.image.startsWith('data:') && p.image.length > 35000) {
+                if (p.image && p.image.startsWith('data:') && p.image.length > 30000) {
                   return Object.assign({}, p);
                 }
                 return p;
@@ -931,9 +1003,7 @@
           if (!db) return;
           const tx = db.transaction(IDB_STORE, 'readwrite');
           tx.objectStore(IDB_STORE).put(JSON.parse(JSON.stringify(state)), key);
-        } catch (err) {
-          console.warn('IndexedDB write warning:', err);
-        }
+        } catch (err) {}
       }
 
       async function persistStatePermanently(changedPost) {
@@ -942,7 +1012,7 @@
         broadcastStateToCloud(changedPost);
       }
 
-      // 2. Per-Post & Per-Room Cloud Sync Engine
+      // 2. Multi-Engine Cross-Device Cloud Sync (ntfy.sh Cloud Event Log + JSONBlob + Gun + REST)
       function initCrossDeviceSync() {
         try {
           if (window.Gun) {
@@ -955,9 +1025,7 @@
             });
             subscribeGunRoom();
           }
-        } catch (e) {
-          console.warn('Gun relay init skipped:', e);
-        }
+        } catch (e) {}
 
         window.addEventListener('storage', e => {
           const currentKey = getRoomStorageKey(syncConfig.roomCode);
@@ -972,8 +1040,103 @@
           }
         });
 
-        pullFromCloudRest();
-        setInterval(pullFromCloudRest, 4500);
+        subscribeNtfyRoomStream(syncConfig.roomCode);
+        pullFromCloudAllEngines();
+        setInterval(pullFromCloudAllEngines, 6000);
+      }
+
+      // Real-time Server-Sent Events (SSE) stream via ntfy.sh so other devices update in <1 sec!
+      function subscribeNtfyRoomStream(roomCode) {
+        try {
+          if (ntfyEventSource) {
+            ntfyEventSource.close();
+            ntfyEventSource = null;
+          }
+          const topic = getNtfyTopicForRoom(roomCode);
+          ntfyEventSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
+          ntfyEventSource.onmessage = ev => {
+            try {
+              const outer = JSON.parse(ev.data);
+              if (!outer || outer.event !== 'message' || !outer.message) return;
+              handleIncomingNtfyPacket(outer.message);
+            } catch (err) {}
+          };
+        } catch (e) {}
+      }
+
+      async function handleIncomingNtfyPacket(rawMessage) {
+        try {
+          const packet = typeof rawMessage === 'string' ? JSON.parse(rawMessage) : rawMessage;
+          if (!packet) return;
+
+          if (packet.type === 'POST_UPSERT' && packet.post) {
+            if (mergeSinglePost(packet.post)) {
+              saveLocalOnly();
+              renderBoard();
+              if (activeDetailPostId === packet.post.id) renderNoteDetailModal(packet.post.id);
+            }
+          } else if (packet.type === 'DELETE_IDS' && Array.isArray(packet.deletedIds)) {
+            if (mergeIncomingState({ deletedIds: packet.deletedIds })) {
+              renderBoard();
+            }
+          } else if (packet.type === 'BLOB_SYNC' && packet.blobId) {
+            if (packet.blobId !== state.cloudBlobId || (packet.updatedAt || 0) >= (state.updatedAt || 0)) {
+              state.cloudBlobId = packet.blobId;
+              await pullFromJsonBlob(packet.blobId);
+            }
+          } else if (packet.posts) {
+            if (mergeIncomingState(packet)) {
+              renderBoard();
+            }
+          }
+        } catch (e) {}
+      }
+
+      async function pullFromJsonBlob(blobId) {
+        if (!blobId) return;
+        try {
+          const res = await fetch(`https://jsonblob.com/api/jsonBlob/${blobId}`, {
+            method: 'GET',
+            headers: { Accept: 'application/json' }
+          });
+          if (res.ok) {
+            const remoteData = await res.json();
+            if (remoteData && mergeIncomingState(remoteData)) {
+              renderBoard();
+              if (activeDetailPostId) renderNoteDetailModal(activeDetailPostId);
+            }
+          }
+        } catch (e) {}
+      }
+
+      async function pushToJsonBlob() {
+        try {
+          const payload = JSON.stringify(state);
+          if (state.cloudBlobId) {
+            const res = await fetch(`https://jsonblob.com/api/jsonBlob/${state.cloudBlobId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: payload
+            });
+            if (res.ok) return state.cloudBlobId;
+          }
+          // Create new blob if none exists yet
+          const createRes = await fetch('https://jsonblob.com/api/jsonBlob', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: payload
+          });
+          if (createRes.ok) {
+            const loc = createRes.headers.get('Location') || createRes.headers.get('location') || '';
+            const idMatch = loc.match(/\/([^\/]+)$/);
+            if (idMatch && idMatch[1]) {
+              state.cloudBlobId = idMatch[1];
+              saveLocalOnly();
+              return state.cloudBlobId;
+            }
+          }
+        } catch (e) {}
+        return '';
       }
 
       function subscribeGunRoom() {
@@ -1004,16 +1167,6 @@
             }
           } catch (e) {}
         });
-
-        gunRoomNode.get('meta').on(metaJson => {
-          if (!metaJson || typeof metaJson !== 'string') return;
-          try {
-            const meta = JSON.parse(metaJson);
-            if (mergeIncomingState(meta)) {
-              renderBoard();
-            }
-          } catch (e) {}
-        });
       }
 
       function getRestEndpointUrl() {
@@ -1028,7 +1181,36 @@
         return '';
       }
 
-      async function pullFromCloudRest() {
+      async function pullFromCloudAllEngines() {
+        const activeRoom = syncConfig.roomCode;
+
+        // 1. Pull cached message history from ntfy.sh (works across all devices & browsers with zero config!)
+        try {
+          const topic = getNtfyTopicForRoom(activeRoom);
+          const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=all`);
+          if (res.ok) {
+            const text = await res.text();
+            const lines = text.split('\n').filter(Boolean);
+            let latestBlobId = state.cloudBlobId || '';
+            for (const line of lines) {
+              try {
+                const outer = JSON.parse(line);
+                if (outer && outer.event === 'message' && outer.message) {
+                  const pkt = JSON.parse(outer.message);
+                  if (pkt && pkt.type === 'BLOB_SYNC' && pkt.blobId) {
+                    latestBlobId = pkt.blobId;
+                  }
+                  await handleIncomingNtfyPacket(pkt);
+                }
+              } catch (innerErr) {}
+            }
+            if (latestBlobId) {
+              await pullFromJsonBlob(latestBlobId);
+            }
+          }
+        } catch (e) {}
+
+        // 2. Pull from custom Firebase / REST DB if configured
         const endpoint = getRestEndpointUrl();
         if (endpoint) {
           try {
@@ -1043,6 +1225,7 @@
           } catch (e) {}
         }
 
+        // 3. Pull from Vercel /api/board if hosted on Vercel
         if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('googleusercontent')) {
           try {
             const roomSafe = encodeURIComponent((syncConfig.roomCode || '101').trim().toUpperCase());
@@ -1059,29 +1242,60 @@
       }
 
       async function broadcastStateToCloud(changedPost) {
-        try {
-          if (gunRoomNode) {
-            gunRoomNode.get('meta').put(
-              JSON.stringify({
-                boardTitle: state.boardTitle,
-                boardSubtitle: state.boardSubtitle,
-                theme: state.theme,
-                updatedAt: state.updatedAt,
-                deletedIds: state.deletedIds
-              })
-            );
-            if (changedPost && changedPost.id) {
-              gunRoomNode.get('posts').get(changedPost.id).put(JSON.stringify(changedPost));
-            } else {
-              state.posts.forEach(p => {
-                gunRoomNode.get('posts').get(p.id).put(JSON.stringify(p));
-              });
+        const topic = getNtfyTopicForRoom(syncConfig.roomCode);
+
+        // 1. Send lightweight post event immediately to ntfy.sh so text/links/likes/comments sync in <1 sec
+        if (changedPost && changedPost.id) {
+          try {
+            const lightPost = Object.assign({}, changedPost);
+            if (lightPost.image && lightPost.image.startsWith('data:') && lightPost.image.length > 2500) {
+              delete lightPost.image;
             }
+            await fetch(`https://ntfy.sh/${topic}`, {
+              method: 'POST',
+              body: JSON.stringify({
+                type: 'POST_UPSERT',
+                post: lightPost,
+                updatedAt: Date.now()
+              })
+            });
+          } catch (e) {}
+        }
+
+        // 2. Sync full state (including base64 uploaded images & deletions) to JSONBlob & announce blobId on ntfy.sh
+        try {
+          const blobId = await pushToJsonBlob();
+          if (blobId) {
+            await fetch(`https://ntfy.sh/${topic}`, {
+              method: 'POST',
+              body: JSON.stringify({
+                type: 'BLOB_SYNC',
+                blobId: blobId,
+                deletedIds: state.deletedIds,
+                updatedAt: state.updatedAt
+              })
+            });
+          } else if (state.deletedIds && state.deletedIds.length > 0) {
+            await fetch(`https://ntfy.sh/${topic}`, {
+              method: 'POST',
+              body: JSON.stringify({
+                type: 'DELETE_IDS',
+                deletedIds: state.deletedIds,
+                updatedAt: state.updatedAt
+              })
+            });
           }
         } catch (e) {}
 
-        const serialized = JSON.stringify(state);
+        // 3. Push to Gun.js
+        try {
+          if (gunRoomNode && changedPost && changedPost.id) {
+            gunRoomNode.get('posts').get(changedPost.id).put(JSON.stringify(changedPost));
+          }
+        } catch (e) {}
 
+        // 4. Push to Firebase / REST DB if configured
+        const serialized = JSON.stringify(state);
         const endpoint = getRestEndpointUrl();
         if (endpoint) {
           try {
@@ -1093,6 +1307,7 @@
           } catch (e) {}
         }
 
+        // 5. Push to Vercel /api/board if hosted on Vercel
         if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('googleusercontent')) {
           try {
             const roomSafe = encodeURIComponent((syncConfig.roomCode || '101').trim().toUpperCase());
@@ -1116,9 +1331,18 @@
       function saveNickname(name) {
         try {
           localStorage.setItem(LS_NICKNAME_KEY, name);
+          localStorage.setItem(LS_ACTIVE_SESSION_KEY, '1');
         } catch (e) {}
         const badge = document.getElementById('activeStudentNameBadge');
         if (badge && name) badge.textContent = name;
+      }
+
+      function hasActiveSession() {
+        try {
+          return Boolean(localStorage.getItem(LS_ACTIVE_SESSION_KEY) && getSavedNickname());
+        } catch (e) {
+          return false;
+        }
       }
 
       // 3. Helper Functions, URL/YouTube Parsers & Reaction Burst Animations
@@ -1229,7 +1453,7 @@
         setTimeout(() => pinInput.focus(), 60);
       }
 
-      function compressImageFile(file, maxWidth = 640, quality = 0.74) {
+      function compressImageFile(file, maxWidth = 580, quality = 0.72) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = ev => {
@@ -1258,14 +1482,35 @@
 
       function getCardStyle(color) {
         const styles = {
-          yellow: 'bg-[#fef9c3] border-[#fde047]/80 text-slate-900',
-          white: 'bg-white border-slate-200/90 text-slate-900',
-          pink: 'bg-[#fce7f3] border-[#f9a8d4]/80 text-slate-900',
-          blue: 'bg-[#e0f2fe] border-[#7dd3fc]/80 text-slate-900',
-          green: 'bg-[#dcfce7] border-[#86efac]/80 text-slate-900',
-          purple: 'bg-[#f3e8ff] border-[#d8b4fe]/80 text-slate-900'
+          yellow: 'bg-[#fef9c3] border-[#fde047] text-slate-900',
+          white: 'bg-white border-slate-200 text-slate-900',
+          pink: 'bg-[#fce7f3] border-[#f9a8d4] text-slate-900',
+          blue: 'bg-[#e0f2fe] border-[#7dd3fc] text-slate-900',
+          green: 'bg-[#dcfce7] border-[#86efac] text-slate-900',
+          purple: 'bg-[#f3e8ff] border-[#d8b4fe] text-slate-900'
         };
         return styles[color] || styles.yellow;
+      }
+
+      function renderLoginSavedRoomChips() {
+        const listEl = document.getElementById('loginSavedRoomsList');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+        const rooms = Array.isArray(syncConfig.recentRooms) ? syncConfig.recentRooms : ['101'];
+        rooms.forEach(rCode => {
+          const count = getRoomPostCount(rCode);
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'px-3 py-1.5 rounded-xl bg-[#0c1018] hover:bg-[#5848ff]/20 border border-[#2a3346] hover:border-[#635bff] text-xs font-semibold text-slate-200 transition flex items-center gap-1.5';
+          chip.innerHTML = `
+            <span>🔑 ${escapeHtml(rCode)}</span>
+            ${count > 0 ? `<span class="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">${count} โพสต์</span>` : ''}
+          `;
+          chip.addEventListener('click', () => {
+            document.getElementById('loginRoomInput').value = rCode;
+          });
+          listEl.appendChild(chip);
+        });
       }
 
       function renderRecentRoomPills() {
@@ -1275,12 +1520,13 @@
         const rooms = Array.isArray(syncConfig.recentRooms) ? syncConfig.recentRooms : ['101'];
         rooms.forEach(rCode => {
           const isCurrent = rCode === syncConfig.roomCode;
+          const count = getRoomPostCount(rCode);
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = isCurrent
             ? 'px-3 py-1 rounded-xl bg-[#5848ff] text-white text-xs font-bold shadow-sm'
             : 'px-3 py-1 rounded-xl bg-[#0c1018] hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold transition';
-          btn.textContent = `ห้อง ${rCode}`;
+          btn.textContent = count > 0 ? `ห้อง ${rCode} (${count})` : `ห้อง ${rCode}`;
           btn.addEventListener('click', () => {
             document.getElementById('inputRoomCode').value = rCode;
             switchRoom(rCode);
@@ -1297,6 +1543,7 @@
         document.getElementById('currentRoomBadgeText').textContent = syncConfig.roomCode;
         document.getElementById('emptyStateRoomLabel').textContent = syncConfig.roomCode;
         document.getElementById('syncStatusLabel').textContent = 'บันทึก';
+        document.getElementById('postCountHeaderBadge').textContent = `${(state.posts && state.posts.length) || 0} โพสต์`;
 
         const savedNick = getSavedNickname();
         if (savedNick) {
@@ -1321,6 +1568,13 @@
         emptyState.classList.add('hidden');
 
         const isMobile = window.innerWidth < 768;
+        const useGridMode = isMobile || state.layoutMode !== 'freeform';
+
+        if (useGridMode) {
+          notesLayer.className = 'relative w-full max-w-[1600px] mx-auto min-h-[calc(100vh-65px)] p-4 sm:p-8 notes-grid-mode';
+        } else {
+          notesLayer.className = 'relative w-full min-h-[calc(100vh-65px)] p-4 sm:p-8';
+        }
 
         state.posts.forEach((post, idx) => {
           if (!Array.isArray(post.comments)) post.comments = [];
@@ -1330,12 +1584,12 @@
           const card = document.createElement('article');
           const colorCls = getCardStyle(post.color);
 
-          if (isMobile) {
-            card.className = `note-card w-full rounded-3xl border ${colorCls} p-5 mb-4 flex flex-col animate-pop`;
+          if (useGridMode) {
+            card.className = `note-card w-full rounded-3xl border-2 ${colorCls} p-5 flex flex-col animate-pop`;
           } else {
             const x = typeof post.x === 'number' ? post.x : 36 + (idx % 4) * 330;
             const y = typeof post.y === 'number' ? post.y : 36 + Math.floor(idx / 4) * 320;
-            card.className = `note-card absolute w-[315px] rounded-3xl border ${colorCls} p-5 flex flex-col cursor-grab active:cursor-grabbing`;
+            card.className = `note-card absolute w-[315px] rounded-3xl border-2 ${colorCls} p-5 flex flex-col cursor-grab active:cursor-grabbing`;
             card.style.left = `${x}px`;
             card.style.top = `${y}px`;
             card.style.zIndex = String(10 + idx);
@@ -1349,7 +1603,7 @@
             <!-- Author Header -->
             <div class="flex items-center justify-between gap-2 mb-3">
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-full bg-slate-900/10 text-slate-900 font-bold text-xs flex items-center justify-center shrink-0">
+                <div class="w-9 h-9 rounded-2xl bg-slate-900/10 text-slate-900 font-bold text-xs flex items-center justify-center shrink-0 shadow-inner">
                   ${escapeHtml(initial)}
                 </div>
                 <div class="min-w-0">
@@ -1378,7 +1632,7 @@
               ${
                 post.image
                   ? `<div class="mb-3 rounded-2xl overflow-hidden border border-black/5 bg-white/60">
-                       <img src="${escapeHtml(post.image)}" alt="รูปภาพประกอบ" class="note-image w-full max-h-48 object-cover group-hover:scale-[1.01] transition" />
+                       <img src="${escapeHtml(post.image)}" alt="รูปภาพประกอบ" class="note-image w-full max-h-52 object-cover group-hover:scale-[1.01] transition" />
                      </div>`
                   : ''
               }
@@ -1391,7 +1645,7 @@
               }
               ${
                 post.externalUrl
-                  ? `<a href="${escapeHtml(post.externalUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mb-3 p-2.5 rounded-2xl bg-white/80 hover:bg-white border border-black/10 flex items-center gap-2 text-xs font-semibold text-indigo-700 transition shadow-sm">
+                  ? `<a href="${escapeHtml(post.externalUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mb-3 p-2.5 rounded-2xl bg-white/85 hover:bg-white border border-black/10 flex items-center gap-2 text-xs font-semibold text-indigo-700 transition shadow-sm">
                        <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">🔗</span>
                        <span class="truncate flex-1">${escapeHtml(post.externalTitle || post.externalUrl)}</span>
                        <span class="text-[10px] text-slate-400 shrink-0">เปิดลิงก์ ↗</span>
@@ -1408,7 +1662,7 @@
             <!-- Latest Comment Preview (if any) -->
             ${
               latestComment
-                ? `<div class="btn-open-comments mb-2.5 px-3 py-2 rounded-2xl bg-white/65 hover:bg-white/90 border border-black/5 text-xs cursor-pointer transition">
+                ? `<div class="btn-open-comments mb-2.5 px-3 py-2 rounded-2xl bg-white/70 hover:bg-white/95 border border-black/5 text-xs cursor-pointer transition">
                      <div class="font-bold text-slate-800 truncate">💬 ${escapeHtml(latestComment.nickname)}</div>
                      <div class="text-slate-600 truncate">${escapeHtml(latestComment.text)}</div>
                    </div>`
@@ -1418,17 +1672,17 @@
             <!-- Footer: Animated Like (👍), Animated Heart (❤️), and Reply (💬) -->
             <div class="mt-auto pt-2.5 flex items-center justify-between gap-1.5 border-t border-black/5">
               <div class="flex items-center gap-1.5">
-                <button type="button" class="btn-like-note inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs font-bold text-blue-700 shadow-sm transition" title="กดถูกใจ">
+                <button type="button" class="btn-like-note inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/85 hover:bg-white text-xs font-bold text-blue-700 shadow-sm transition" title="กดถูกใจ">
                   <span class="text-sm">👍</span>
                   <span class="like-count-span">${post.likes || 0}</span>
                 </button>
-                <button type="button" class="btn-heart-note inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs font-bold text-rose-600 shadow-sm transition" title="กดหัวใจ">
+                <button type="button" class="btn-heart-note inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/85 hover:bg-white text-xs font-bold text-rose-600 shadow-sm transition" title="กดหัวใจ">
                   <span class="text-sm">❤️</span>
                   <span class="heart-count-span">${post.hearts || 0}</span>
                 </button>
               </div>
 
-              <button type="button" class="btn-open-comments inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/80 hover:bg-white text-xs font-semibold text-indigo-700 shadow-sm transition">
+              <button type="button" class="btn-open-comments inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/85 hover:bg-white text-xs font-semibold text-indigo-700 shadow-sm transition">
                 <span>💬</span>
                 <span>${post.comments.length > 0 ? `${post.comments.length} ความคิดเห็น` : 'ความคิดเห็น'}</span>
               </button>
@@ -1486,7 +1740,7 @@
             );
           });
 
-          if (!isMobile) {
+          if (!useGridMode) {
             makeCardDraggableOrClickable(card, post);
           } else {
             card.querySelector('.note-clickable-body').addEventListener('click', () => {
@@ -1780,7 +2034,6 @@
 
       // 7. Bind All Interactive Controls & Dark Login Screen
       function bindEvents() {
-        // Dark Login Screen Initialization & Submission
         const loginOverlay = document.getElementById('loginScreenOverlay');
         const loginRoomInput = document.getElementById('loginRoomInput');
         const loginNicknameInput = document.getElementById('loginNicknameInput');
@@ -1788,6 +2041,12 @@
 
         loginRoomInput.value = syncConfig.roomCode || '101';
         loginNicknameInput.value = getSavedNickname() || '';
+        renderLoginSavedRoomChips();
+
+        // If user already has an active session in this browser (e.g. refreshed or came back), go straight to their board so posts are immediately visible!
+        if (hasActiveSession()) {
+          loginOverlay.classList.add('hidden');
+        }
 
         document.getElementById('formDarkLogin').addEventListener('submit', async e => {
           e.preventDefault();
@@ -1815,6 +2074,7 @@
           loginRoomInput.value = syncConfig.roomCode || '101';
           loginNicknameInput.value = getSavedNickname() || '';
           loginErrorMsg.classList.add('hidden');
+          renderLoginSavedRoomChips();
           loginOverlay.classList.remove('hidden');
           setTimeout(() => loginRoomInput.focus(), 60);
         });
@@ -1839,11 +2099,11 @@
         // "บันทึก" Button
         document.getElementById('btnSyncStatusPill').addEventListener('click', async () => {
           await persistStatePermanently();
-          await pullFromCloudRest();
-          showToast(`บันทึกข้อมูลห้อง "${syncConfig.roomCode}" ถาวรเรียบร้อยแล้ว (${state.posts.length} โพสต์)`);
+          await pullFromCloudAllEngines();
+          showToast(`บันทึกและซิงค์ห้อง "${syncConfig.roomCode}" สำเร็จ (${state.posts.length} โพสต์)`);
         });
 
-        // Double click anywhere on empty whiteboard canvas to spawn a note at that spot
+        // Double click anywhere on empty whiteboard canvas to spawn a note
         document.getElementById('whiteboardSurface').addEventListener('dblclick', e => {
           if (e.target.closest('article') || e.target.closest('button')) return;
           const rect = document.getElementById('notesLayer').getBoundingClientRect();
@@ -1962,7 +2222,7 @@
               time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
             };
             state.posts.push(savedPost);
-            showToast(`แปะโน้ตลงในห้อง "${syncConfig.roomCode}" และบันทึกถาวรแล้ว`);
+            showToast(`แปะโน้ตลงในห้อง "${syncConfig.roomCode}" และซิงค์ออนไลน์แล้ว`);
           }
 
           renderBoard();
@@ -2049,19 +2309,22 @@
           showToast('เพิ่มความคิดเห็นต่อท้ายเรียบร้อยแล้ว');
         });
 
-        // Auto Arrange Grid
+        // Toggle Grid / Freeform & Auto Arrange
         document.getElementById('btnArrangeGrid').addEventListener('click', () => {
-          if (!state.posts.length) return;
-          const cols = Math.max(1, Math.floor((window.innerWidth - 80) / 330));
-          const nowMs = Date.now();
-          state.posts.forEach((p, idx) => {
-            p.x = 36 + (idx % cols) * 330;
-            p.y = 36 + Math.floor(idx / cols) * 320;
-            p.updatedAtMs = nowMs;
-          });
+          if (state.layoutMode === 'freeform') {
+            state.layoutMode = 'grid';
+            showToast('ปรับเป็นโหมดจัดเรียงการ์ดอัตโนมัติ (Grid สวยงาม)');
+          } else {
+            state.layoutMode = 'freeform';
+            const cols = Math.max(1, Math.floor((window.innerWidth - 80) / 330));
+            state.posts.forEach((p, idx) => {
+              p.x = 36 + (idx % cols) * 330;
+              p.y = 36 + Math.floor(idx / cols) * 320;
+            });
+            showToast('ปรับเป็นโหมดไวท์บอร์ดลากวางอิสระ');
+          }
           persistStatePermanently();
           renderBoard();
-          showToast('จัดเรียงโน้ตเป็นระเบียบแล้ว');
         });
 
         // Theme dots
@@ -2088,6 +2351,7 @@
         document.getElementById('btnEmptyStateSwitchRoom').addEventListener('click', () => {
           loginRoomInput.value = syncConfig.roomCode || '101';
           loginNicknameInput.value = getSavedNickname() || '';
+          renderLoginSavedRoomChips();
           loginOverlay.classList.remove('hidden');
         });
         document.getElementById('btnCloseBoardModal').addEventListener('click', () => {
@@ -2121,7 +2385,7 @@
             state.boardSubtitle = s;
             saveSyncConfig();
             persistStatePermanently();
-            pullFromCloudRest();
+            pullFromCloudAllEngines();
             renderBoard();
             showToast(`บันทึกข้อมูลห้อง "${rCode}" เรียบร้อยแล้ว`);
           }
