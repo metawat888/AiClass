@@ -3,301 +3,1316 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ClassRoom — กระดานแสดงความคิดเห็นตามรหัสห้อง</title>
+  <title>Classroom Whiteboard — กระดานแสดงความคิดเห็นแยกตามรหัสห้อง</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1240/gun.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Sarabun', sans-serif; box-sizing: border-box; }
-    .dot-grid {
-      background-color: #0f172a; /* Dark slate 900 */
-      background-image: radial-gradient(#334155 1.5px, transparent 1.5px); /* Slate 700 dots */
-      background-size: 28px 28px;
+    * {
+      box-sizing: border-box;
+      font-family: 'Sarabun', 'Inter', sans-serif;
     }
-    .note-card { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); transition: transform 0.15s ease, box-shadow 0.15s ease; }
-    .note-card:hover { box-shadow: 0 20px 30px -8px rgba(0,0,0,0.5); }
-    @keyframes pop { 0% { opacity:0; transform:scale(0.95); } 100% { opacity:1; transform:scale(1); } }
-    .animate-pop { animation: pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    body {
+      margin: 0;
+      background-color: #070a14;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+    /* Minimalist Whiteboard Dot Grid */
+    .whiteboard-canvas {
+      background-color: #f8fafc;
+      background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+      background-size: 28px 28px;
+      transition: background-color 0.3s ease;
+    }
+    .whiteboard-canvas.theme-warm {
+      background-color: #fffdf7;
+      background-image: radial-gradient(#e2d9c5 1.5px, transparent 1.5px);
+    }
+    .whiteboard-canvas.theme-mint {
+      background-color: #f4fbf7;
+      background-image: radial-gradient(#bce3ce 1.5px, transparent 1.5px);
+    }
+    .whiteboard-canvas.theme-sky {
+      background-color: #f4f9ff;
+      background-image: radial-gradient(#bfd8f5 1.5px, transparent 1.5px);
+    }
+    .whiteboard-canvas.theme-dark {
+      background-color: #0b0f1c;
+      background-image: radial-gradient(#263044 1.5px, transparent 1.5px);
+    }
+
+    /* Dark Login Screen Glow */
+    .login-bg-surface {
+      background: radial-gradient(circle at 50% 35%, #161d33 0%, #070a14 70%);
+    }
+    .login-card-surface {
+      background-color: #1c2230;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.75), 0 0 50px -15px rgba(91, 72, 255, 0.18);
+    }
+
+    /* Sticky Note Card Styling */
+    .note-card {
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14), 0 4px 10px -4px rgba(15, 23, 42, 0.08);
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+    }
+    .note-card:hover {
+      box-shadow: 0 20px 30px -8px rgba(15, 23, 42, 0.22), 0 8px 16px -6px rgba(15, 23, 42, 0.12);
+    }
+    .note-card.dragging {
+      cursor: grabbing !important;
+      transform: scale(1.03) rotate(1deg);
+      box-shadow: 0 28px 45px -10px rgba(0, 0, 0, 0.35);
+      z-index: 999 !important;
+      transition: none;
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.95) translateY(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-pop {
+      animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Reaction Button Pop & Floating Burst Animations */
+    @keyframes reactionBounce {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.38) rotate(-8deg); }
+      60% { transform: scale(0.92) rotate(4deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    .animate-reaction-pop {
+      animation: reactionBounce 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes floatUpParticle {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(0.6) rotate(0deg);
+      }
+      40% {
+        opacity: 1;
+        transform: translate(var(--tx-mid, 12px), -45px) scale(1.35) rotate(var(--rot, 12deg));
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx-end, -15px), -110px) scale(0.85) rotate(var(--rot-end, -15deg));
+      }
+    }
+    .reaction-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      font-size: 1.4rem;
+      user-select: none;
+      filter: drop-shadow(0 4px 8px rgba(15, 23, 42, 0.18));
+      animation: floatUpParticle 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes ringRipple {
+      0% {
+        transform: scale(0.5);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(2.4);
+        opacity: 0;
+      }
+    }
+    .reaction-ripple {
+      position: fixed;
+      width: 28px;
+      height: 28px;
+      border-radius: 9999px;
+      pointer-events: none;
+      z-index: 9998;
+      animation: ringRipple 0.55s ease-out forwards;
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-900 text-slate-100 select-none">
+<body class="min-h-screen flex flex-col select-none">
 
-  <!-- LOGIN / ROOM ENTRY OVERLAY -->
-  <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-700 animate-pop">
-      <div class="text-center mb-6">
-        <div class="w-14 h-14 bg-indigo-500 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30 mb-3">
-          🏫
-        </div>
-        <h1 class="font-bold text-xl text-white">เข้าสู่ห้องเรียน</h1>
-        <p class="text-xs text-slate-400 mt-1">กรอกรหัสห้องและชื่อเล่นเพื่อเข้าร่วมกระดานกิจกรรมในชั้นเรียน</p>
+  <!-- DARK LOGIN SCREEN OVERLAY (Matches Reference Image) -->
+  <div id="loginScreenOverlay" class="fixed inset-0 z-50 login-bg-surface flex items-center justify-center p-4">
+    <div class="login-card-surface rounded-[28px] max-w-[500px] w-full p-7 sm:p-10 animate-pop">
+      <!-- Top Purple School Icon Badge -->
+      <div class="w-16 h-16 rounded-[20px] bg-[#665df5] shadow-[0_8px_25px_rgba(102,93,245,0.45)] flex items-center justify-center mx-auto mb-5 text-3xl" title="Classroom Whiteboard">
+        🏫
       </div>
 
-      <form id="formLogin" class="space-y-4">
+      <!-- Heading & Subtitle -->
+      <h2 class="text-2xl sm:text-[28px] font-bold text-white text-center tracking-tight">
+        เข้าสู่ห้องเรียน
+      </h2>
+      <p class="text-xs sm:text-sm text-[#94a3b8] text-center mt-2 mb-7">
+        กรอกรหัสห้องและชื่อเล่นเพื่อเข้าร่วมกระดานกิจกรรมในชั้นเรียน
+      </p>
+
+      <!-- Login Form -->
+      <form id="formDarkLogin" class="space-y-5">
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">รหัสห้องเรียน (Room Code) *</label>
-          <input id="loginRoomInput" type="text" required placeholder="เช่น 101, Math101, ม.2/1..." class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-indigo-400 focus:outline-none focus:border-indigo-500 focus:bg-slate-900 transition" />
+          <label for="loginRoomInput" class="block text-xs sm:text-sm font-bold text-[#e2e8f0] mb-2">
+            รหัสห้องเรียน (Room Code) *
+          </label>
+          <input
+            id="loginRoomInput"
+            type="text"
+            placeholder="เช่น 101, Math101, ม.2/1..."
+            class="w-full px-4 py-3.5 rounded-2xl bg-[#0c1018] border border-[#2a3346] text-white placeholder-[#64748b] text-sm sm:text-base font-medium focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30 transition"
+          />
         </div>
+
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">ชื่อเล่นของคุณ (Nickname) *</label>
-          <input id="loginNickInput" type="text" required placeholder="พิมพ์ชื่อเล่นของคุณที่นี่..." class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-sm font-semibold text-slate-100 focus:outline-none focus:border-indigo-500 focus:bg-slate-900 transition" />
+          <label for="loginNicknameInput" class="block text-xs sm:text-sm font-bold text-[#e2e8f0] mb-2">
+            ชื่อเล่นของคุณ (Nickname) *
+          </label>
+          <input
+            id="loginNicknameInput"
+            type="text"
+            placeholder="พิมพ์ชื่อเล่นของคุณที่นี่..."
+            class="w-full px-4 py-3.5 rounded-2xl bg-[#0c1018] border border-[#2a3346] text-white placeholder-[#64748b] text-sm sm:text-base font-medium focus:outline-none focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff]/30 transition"
+          />
         </div>
-        <button type="submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition">
-          🚀 เข้าสู่ห้องเรียน
-        </button>
+
+        <p id="loginErrorMsg" class="hidden text-xs font-semibold text-rose-400 text-center">
+          กรุณากรอกรหัสห้องเรียนและชื่อเล่นของคุณให้ครบถ้วน
+        </p>
+
+        <div class="pt-1">
+          <button
+            id="btnSubmitDarkLogin"
+            type="submit"
+            class="w-full py-4 rounded-2xl bg-[#5848ff] hover:bg-[#4b3bf5] active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-[0_10px_28px_rgba(88,72,255,0.48)] transition flex items-center justify-center gap-2"
+          >
+            <span>🚀</span>
+            <span>เข้าสู่ห้องเรียน</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- TOP HEADER BAR -->
-  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-3 shadow-md">
-    <div class="flex items-center gap-3 min-w-0">
-      <div class="w-10 h-10 rounded-2xl bg-indigo-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-indigo-500/20 shrink-0">
-        🏫
+  <!-- Minimal Floating Top Bar (Dark Cohesive Header) -->
+  <header class="sticky top-0 z-30 bg-[#121726]/95 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3">
+    <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+
+      <!-- Editable Board Title & Subtitle -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-[#5848ff] text-white flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0 text-lg">
+          🏫
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 id="boardTitleText" class="font-bold text-base sm:text-xl text-white truncate cursor-pointer hover:text-indigo-400 transition" title="คลิกเพื่อเปลี่ยนชื่อหัวข้อกระดาน">
+              กระดานแสดงความคิดเห็นในชั้นเรียน
+            </h1>
+            <button id="btnEditBoardTitle" type="button" class="p-1 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition" title="ตั้งค่าหัวข้อกระดาน">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          </div>
+          <p id="boardSubtitleText" class="text-xs text-slate-400 truncate">
+            คลิกที่โน้ตเพื่อแสดงความคิดเห็นต่อ กดไลก์ กดหัวใจ แนบลิงก์ YouTube รูปภาพ หรือไฟล์ได้ครบครัน
+          </p>
+        </div>
       </div>
-      <div class="min-w-0">
-        <h1 id="boardTitle" class="font-bold text-base sm:text-lg text-slate-100 truncate cursor-pointer hover:text-indigo-400 transition" title="คลิกเพื่อเปลี่ยนชื่อห้องเรียน">
-          ห้องเรียนออนไลน์
-        </h1>
-        <p id="boardSub" class="text-xs text-slate-400 truncate">กระดานแสดงความคิดเห็น แลกเปลี่ยนความรู้ และแชร์สื่อการเรียนรู้</p>
+
+      <!-- Right Controls: Active User & Room Switcher, Save Button, Theme, Arrange, Add Note -->
+      <div class="flex items-center flex-wrap gap-2 sm:gap-2.5">
+
+        <!-- Active Student Badge + Open Login Screen to Switch Room/Nickname -->
+        <button id="btnOpenLoginScreen" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition" title="คลิกเพื่อเปลี่ยนชื่อเล่นหรือเปลี่ยนรหัสห้องเรียน">
+          <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+          <span id="activeStudentNameBadge">นักเรียน</span>
+          <span class="text-slate-500">|</span>
+          <span class="text-indigo-400">สลับห้อง</span>
+        </button>
+
+        <!-- Quick Room Code Entry Box (เข้าตามรหัสห้อง/กลุ่ม) -->
+        <form id="formQuickRoomSwitch" class="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700">
+          <button id="btnOpenRoomModal" type="button" class="px-2.5 py-1 rounded-lg bg-slate-900 text-indigo-400 font-bold text-xs shadow-sm flex items-center gap-1 hover:bg-slate-950 transition" title="คลิกเพื่อเลือกหรือสลับกลุ่ม">
+            <span>🔑 ห้อง:</span>
+            <span id="currentRoomBadgeText">101</span>
+          </button>
+          <input id="inputQuickRoomCode" type="text" placeholder="ใส่รหัสห้อง/กลุ่ม..." class="w-24 sm:w-28 px-2.5 py-1 bg-transparent text-xs font-semibold text-white placeholder-slate-400 focus:outline-none" />
+          <button id="btnJoinRoomQuick" type="submit" class="px-2.5 py-1 rounded-lg bg-[#5848ff] hover:bg-[#4b3bf5] text-white text-xs font-semibold transition">
+            เข้าห้อง
+          </button>
+        </form>
+
+        <!-- "บันทึก" Button -->
+        <button id="btnSyncStatusPill" type="button" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition" title="บันทึกข้อมูลถาวรและซิงค์ตามรหัสห้องปัจจุบัน">
+          <span id="syncDotIndicator" class="w-2 h-2 rounded-full bg-emerald-200 animate-pulse"></span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span id="syncStatusLabel">บันทึก</span>
+        </button>
+
+        <!-- Surface Color Dots -->
+        <div class="hidden lg:flex items-center gap-1.5 bg-slate-800/90 px-2.5 py-1.5 rounded-xl border border-slate-700">
+          <button type="button" data-theme="dark" class="theme-dot w-4 h-4 rounded-full bg-slate-900 border border-indigo-400" title="พื้นหลังสีเข้ม"></button>
+          <button type="button" data-theme="default" class="theme-dot w-4 h-4 rounded-full bg-slate-200 border border-slate-400" title="พื้นหลังสีขาวจุด"></button>
+          <button type="button" data-theme="warm" class="theme-dot w-4 h-4 rounded-full bg-amber-100 border border-amber-400" title="พื้นหลังสีครีมอุ่น"></button>
+          <button type="button" data-theme="mint" class="theme-dot w-4 h-4 rounded-full bg-emerald-100 border border-emerald-400" title="พื้นหลังสีมิ้นท์"></button>
+          <button type="button" data-theme="sky" class="theme-dot w-4 h-4 rounded-full bg-sky-100 border border-sky-400" title="พื้นหลังสีฟ้าอ่อน"></button>
+        </div>
+
+        <!-- Auto Arrange Grid Button -->
+        <button id="btnArrangeGrid" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition" title="จัดเรียงโน้ตให้เป็นระเบียบ">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span class="hidden xl:inline">จัดเรียงโน้ต</span>
+        </button>
+
+        <!-- Primary Add Note CTA -->
+        <button id="btnOpenNewPostModal" type="button" class="px-4 py-2 rounded-xl bg-[#5848ff] hover:bg-[#4b3bf5] active:scale-[0.99] text-white font-semibold text-xs sm:text-sm shadow-md shadow-indigo-500/30 flex items-center gap-1.5 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>เพิ่มความคิดเห็น</span>
+        </button>
       </div>
-    </div>
-
-    <!-- QUICK CONTROLS -->
-    <div class="flex items-center gap-2">
-      <button id="btnSwitchRoom" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition" title="ออกจากห้องเพื่อเปลี่ยนห้อง">
-        <span>🚪</span> <span id="lblCurrentRoomBadge" class="font-bold text-indigo-400">ห้อง: 101</span>
-      </button>
-
-      <button id="btnSave" type="button" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
-        <span>💾</span> <span class="hidden sm:inline">บันทึก</span>
-      </button>
-
-      <button id="btnAdd" type="button" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition">
-        <span>➕</span> <span>เขียนโพสต์</span>
-      </button>
     </div>
   </header>
 
-  <!-- MAIN CANVAS -->
-  <main id="canvas" class="dot-grid flex-1 relative w-full min-h-[calc(100vh-65px)] overflow-auto p-4 sm:p-8">
-    <div id="emptyState" class="absolute inset-0 flex items-center justify-center p-6 text-center pointer-events-none">
-      <div class="bg-slate-800/95 backdrop-blur-md border border-slate-700 rounded-3xl p-8 max-w-sm shadow-2xl pointer-events-auto">
-        <div class="text-3xl mb-2">✨</div>
-        <h3 class="font-bold text-base text-slate-100">กระดานห้อง <span id="lblRoom" class="text-indigo-400">101</span> ว่างอยู่</h3>
-        <p class="text-xs text-slate-400 mt-1 mb-4">ยังไม่มีโน้ตในห้องนี้ มาเริ่มเขียนโพสต์แรกหรือแนบลิงก์ YouTube / รูปภาพกันเลย!</p>
-        <button id="btnEmptyAdd" type="button" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition">
-          เขียนโพสต์แรก
-        </button>
+  <!-- Single Full-Screen Whiteboard Canvas -->
+  <main id="whiteboardSurface" class="whiteboard-canvas theme-dark flex-1 relative w-full min-h-[calc(100vh-65px)] overflow-auto">
+
+    <!-- Empty State (Shown when there are 0 posts in this room — Zero Fake Data) -->
+    <div id="emptyBoardState" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+      <div class="bg-[#1c2230]/95 backdrop-blur-md border border-slate-700/80 rounded-3xl p-8 max-w-md shadow-2xl pointer-events-auto">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold mb-3">
+          <span>🔑 รหัสห้องปัจจุบัน:</span>
+          <span id="emptyStateRoomLabel">101</span>
+        </div>
+        <h2 class="text-lg font-bold text-white">กระดานไวท์บอร์ดพร้อมใช้งาน</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1.5 leading-relaxed">
+          ยังไม่มีโพสต์ในรหัสห้องนี้ กดปุ่มด้านล่างหรือ<strong>ดับเบิลคลิกพื้นที่ว่างบนกระดาน</strong> เพื่อพิมพ์ข้อความ แนบรูปภาพ ลิงก์ YouTube หรือเว็บไซต์ได้เลย
+        </p>
+        <div class="mt-5 flex flex-col sm:flex-row gap-2">
+          <button id="btnEmptyStateAdd" type="button" class="flex-1 py-3 px-5 rounded-xl bg-[#5848ff] hover:bg-[#4b3bf5] text-white font-semibold text-sm shadow-md shadow-indigo-500/30 transition flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            เขียนโพสต์แรกบนกระดาน
+          </button>
+          <button id="btnEmptyStateSwitchRoom" type="button" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition">
+            เปลี่ยนรหัสห้อง/กลุ่ม
+          </button>
+        </div>
       </div>
     </div>
 
-    <div id="notesContainer" class="relative w-full min-h-full"></div>
+    <!-- Notes Layer -->
+    <div id="notesLayer" class="relative w-full min-h-[calc(100vh-65px)] p-4 sm:p-8">
+      <!-- Dynamic sticky notes rendered here -->
+    </div>
+
+    <!-- Floating Bottom-Right Quick Add Button -->
+    <button id="btnFloatingAdd" type="button" class="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-2xl bg-[#5848ff] hover:bg-[#4b3bf5] text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition hover:scale-105 active:scale-95" title="เพิ่มความคิดเห็นใหม่">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
   </main>
 
-  <!-- MODAL: CREATE/EDIT POST -->
-  <div id="modalPost" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-700 animate-pop max-h-[90vh] overflow-y-auto">
+  <!-- MODAL 1: Create / Edit Note on Whiteboard (Supports Text, Image Upload/URL, YouTube, External Links, Files) -->
+  <div id="modalPost" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#1c2230] text-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h3 id="modalTitle" class="font-bold text-base text-slate-100">เขียนความคิดเห็น / แนบสื่อ</h3>
-        <button id="btnClosePost" type="button" class="text-slate-400 hover:text-slate-200 text-lg px-2 transition">✕</button>
+        <h3 id="modalPostHeading" class="text-base sm:text-lg font-bold text-white">แปะโน้ตแสดงความคิดเห็น</h3>
+        <button id="btnClosePostModal" type="button" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-      <div class="space-y-3">
+
+      <div class="space-y-3.5">
+        <!-- Nickname -->
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">ชื่อเล่นของคุณ *</label>
-          <input id="inputNick" type="text" placeholder="เช่น น้องมินท์..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-semibold text-slate-100 focus:outline-none focus:border-indigo-500 transition" />
+          <label for="inputNickname" class="block text-xs font-semibold text-slate-300 mb-1">ชื่อเล่นของคุณ <span class="text-rose-400">*</span></label>
+          <input id="inputNickname" type="text" placeholder="พิมพ์ชื่อเล่น เช่น น้องมินท์, กัปตัน..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0c1018] border border-slate-700 text-sm font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" />
         </div>
+
+        <!-- Note Text -->
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">ข้อความ</label>
-          <textarea id="inputText" rows="3" placeholder="พิมพ์ความคิดเห็นหรือคำถาม..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
+          <label for="inputNoteText" class="block text-xs font-semibold text-slate-300 mb-1">ข้อความ / ความคิดเห็น</label>
+          <textarea id="inputNoteText" rows="3" placeholder="เขียนความคิดเห็น ไอเดีย หรือวางลิงก์ใดๆ ที่นี่ได้เลย..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0c1018] border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">🔗 YouTube Link (ไม่บังคับ)</label>
-          <input id="inputYoutube" type="url" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 transition" />
+
+        <!-- Media & Attachments Section (Image Upload, Image URL, YouTube Link, Web/File Link) -->
+        <div class="p-3.5 rounded-2xl bg-[#121723] border border-slate-800 space-y-3">
+          <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <span>📎 เพิ่มรูปภาพ / วิดีโอ YouTube / ลิงก์เว็บไซต์หรือไฟล์</span>
+          </div>
+
+          <!-- 1. Image Upload OR Image URL -->
+          <div id="imageUploadBox" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label for="inputImageFile" class="py-2 px-3 rounded-xl border border-dashed border-indigo-400/60 hover:border-indigo-400 bg-[#0c1018] hover:bg-indigo-950/40 text-xs font-semibold text-indigo-300 flex items-center justify-center gap-1.5 cursor-pointer transition">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>อัปโหลดรูปจากเครื่อง</span>
+              <input id="inputImageFile" type="file" accept="image/*" class="hidden" />
+            </label>
+            <input id="inputImageUrl" type="url" placeholder="หรือวางลิงก์รูปภาพ (https://...)" class="px-3 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+          </div>
+
+          <!-- Image Preview -->
+          <div id="imagePreviewWrapper" class="hidden relative rounded-xl overflow-hidden border border-slate-700 bg-[#0c1018] p-2 flex items-center justify-between">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <img id="imagePreviewEl" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="ตัวอย่างรูปภาพ" class="h-14 w-16 object-cover rounded-lg border border-slate-700 bg-white shrink-0" />
+              <span class="text-xs font-medium text-emerald-400 truncate">แนบรูปภาพเรียบร้อยแล้ว</span>
+            </div>
+            <button id="btnRemoveImage" type="button" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-semibold shrink-0 transition">
+              ลบรูป
+            </button>
+          </div>
+
+          <!-- 2. YouTube Link -->
+          <div>
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="text-rose-500 text-xs">▶️</span>
+              <label for="inputYoutubeUrl" class="text-[11px] font-semibold text-slate-300">ลิงก์วิดีโอ YouTube (แสดงเครื่องเล่นวิดีโอบนการ์ดทันที)</label>
+            </div>
+            <input id="inputYoutubeUrl" type="url" placeholder="วางลิงก์ YouTube เช่น https://www.youtube.com/watch?v=..." class="w-full px-3 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500" />
+          </div>
+
+          <!-- 3. External Website / Google Drive / Canva / Document Link -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label for="inputExternalUrl" class="block text-[11px] font-semibold text-slate-300 mb-1">🔗 ลิงก์เว็บไซต์ / Canva / Drive / ไฟล์</label>
+              <input id="inputExternalUrl" type="url" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+            </div>
+            <div>
+              <label for="inputExternalTitle" class="block text-[11px] font-semibold text-slate-300 mb-1">ชื่อปุ่มลิงก์ (ไม่บังคับ)</label>
+              <input id="inputExternalTitle" type="text" placeholder="เช่น เปิดสไลด์นำเสนอ / เอกสาร" class="w-full px-3 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+            </div>
+          </div>
         </div>
+
+        <!-- Sticky Note Color Picker -->
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">📷 แนบรูปภาพ (ไม่บังคับ)</label>
-          <input id="inputImgFile" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-indigo-300 hover:file:bg-slate-600 cursor-pointer transition" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">สีกระดาษ</label>
-          <div class="flex gap-2">
-            <button type="button" data-color="yellow" class="color-btn w-7 h-7 rounded-full bg-amber-900/60 border-2 border-transparent"></button>
-            <button type="button" data-color="white" class="color-btn w-7 h-7 rounded-full bg-slate-700 border-2 border-transparent"></button>
-            <button type="button" data-color="pink" class="color-btn w-7 h-7 rounded-full bg-pink-900/60 border-2 border-transparent"></button>
-            <button type="button" data-color="blue" class="color-btn w-7 h-7 rounded-full bg-sky-900/60 border-2 border-transparent"></button>
-            <button type="button" data-color="green" class="color-btn w-7 h-7 rounded-full bg-emerald-900/60 border-2 border-transparent"></button>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">สีกระดาษโน้ต</label>
+          <div class="flex items-center gap-2.5">
+            <button type="button" data-color="yellow" class="color-swatch w-7 h-7 rounded-full bg-[#fef9c3] border-2 border-indigo-400 shadow-sm" title="เหลืองพาสเทล"></button>
+            <button type="button" data-color="white" class="color-swatch w-7 h-7 rounded-full bg-white border border-slate-400 shadow-sm" title="ขาวมินิมอล"></button>
+            <button type="button" data-color="pink" class="color-swatch w-7 h-7 rounded-full bg-[#fce7f3] border border-pink-300 shadow-sm" title="ชมพูพาสเทล"></button>
+            <button type="button" data-color="blue" class="color-swatch w-7 h-7 rounded-full bg-[#e0f2fe] border border-sky-300 shadow-sm" title="ฟ้าพาสเทล"></button>
+            <button type="button" data-color="green" class="color-swatch w-7 h-7 rounded-full bg-[#dcfce7] border border-emerald-300 shadow-sm" title="เขียวมิ้นท์"></button>
+            <button type="button" data-color="purple" class="color-swatch w-7 h-7 rounded-full bg-[#f3e8ff] border border-purple-300 shadow-sm" title="ม่วงลาเวนเดอร์"></button>
           </div>
         </div>
       </div>
-      <div class="mt-5 flex justify-end gap-2">
-        <button id="btnCancelPost" type="button" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold transition">ยกเลิก</button>
-        <button id="btnSubmitPost" type="button" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">โพสต์เลย</button>
+
+      <!-- Submit & Cancel -->
+      <div class="mt-5 flex items-center justify-end gap-2">
+        <button id="btnCancelPost" type="button" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+          ยกเลิก
+        </button>
+        <button id="btnSavePost" type="button" class="px-6 py-2.5 rounded-xl bg-[#5848ff] hover:bg-[#4b3bf5] text-white text-xs sm:text-sm font-semibold shadow-md shadow-indigo-500/30 transition">
+          โพสต์ลงกระดาน
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: NOTE DETAIL & COMMENTS -->
-  <div id="modalDetail" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-800 rounded-3xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-700 overflow-hidden animate-pop">
-      <div id="detailHeader" class="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div id="detailInit" class="w-9 h-9 rounded-full bg-white/10 font-bold text-xs flex items-center justify-center text-white">น</div>
-          <div>
-            <div id="detailName" class="font-bold text-sm text-slate-100">ชื่อ</div>
-            <div id="detailTime" class="text-[10px] text-slate-400">เวลา</div>
+  <!-- MODAL 2: Note Detail & Replies (คลิกเข้าไปแสดงความคิดเห็นต่อได้ + กดไลก์/หัวใจพร้อม Animation) -->
+  <div id="modalNoteDetail" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-pop">
+
+      <!-- Note Header inside Modal -->
+      <div id="detailCardHeader" class="px-6 pt-5 pb-4 border-b border-black/5 flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div id="detailAuthorInitial" class="w-10 h-10 rounded-full bg-slate-900/10 text-slate-900 font-bold text-sm flex items-center justify-center shrink-0">
+            น
+          </div>
+          <div class="min-w-0">
+            <div id="detailAuthorName" class="font-bold text-base text-slate-900 truncate">ชื่อเล่น</div>
+            <div id="detailPostTime" class="text-xs text-slate-500">เวลาโพสต์</div>
           </div>
         </div>
-        <button id="btnCloseDetail" type="button" class="text-slate-400 hover:text-slate-200 px-2 transition">✕</button>
+        <button id="btnCloseNoteDetail" type="button" class="p-1.5 rounded-xl bg-black/5 hover:bg-black/10 text-slate-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-      <div class="p-5 overflow-y-auto flex-1 space-y-4">
-        <div id="detailMediaWrap" class="hidden rounded-xl overflow-hidden bg-slate-900 border border-slate-700">
-          <!-- Dynamic Media Render -->
+
+      <!-- Scrollable Body: Full Post + Media + Reactions + Comments List -->
+      <div class="p-6 overflow-y-auto flex-1 space-y-4">
+        <!-- Image (if any) -->
+        <div id="detailImageWrapper" class="hidden rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+          <img id="detailImageEl" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="รูปภาพประกอบ" class="w-full max-h-80 object-contain cursor-zoom-in mx-auto" />
         </div>
-        <p id="detailText" class="text-sm text-slate-200 whitespace-pre-line leading-relaxed"></p>
-        <div class="flex items-center gap-3 pt-2 border-t border-slate-700 text-xs">
-          <button id="btnLike" class="px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-400 font-bold hover:bg-blue-500/30 transition">👍 ถูกใจ (<span id="likeCount">0</span>)</button>
-          <button id="btnHeart" class="px-3 py-1.5 rounded-full bg-rose-500/20 text-rose-400 font-bold hover:bg-rose-500/30 transition">❤️ หัวใจ (<span id="heartCount">0</span>)</button>
+
+        <!-- YouTube Embed (if any) -->
+        <div id="detailYoutubeWrapper" class="hidden rounded-2xl overflow-hidden border border-slate-200 bg-black aspect-video">
+          <iframe id="detailYoutubeIframe" class="w-full h-full" src="about:blank" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         </div>
-        <div class="space-y-2 pt-2">
-          <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">ความคิดเห็นต่อท้าย</h4>
-          <div id="commentsList" class="space-y-2"></div>
+
+        <!-- External Link Card (if any) -->
+        <div id="detailLinkWrapper" class="hidden"></div>
+
+        <!-- Text Content -->
+        <div id="detailTextContent" class="text-sm sm:text-base text-slate-800 whitespace-pre-line leading-relaxed select-text"></div>
+
+        <!-- Like & Heart Reaction Buttons Bar -->
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+          <div class="flex items-center gap-2">
+            <button id="btnDetailLike" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 text-xs font-bold transition shadow-sm">
+              <span class="text-base">👍</span>
+              <span>ถูกใจ</span>
+              <span id="detailLikeCount" class="px-1.5 py-0.5 rounded-full bg-blue-600 text-white text-[11px]">0</span>
+            </button>
+            <button id="btnDetailHeart" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 text-xs font-bold transition shadow-sm">
+              <span class="text-base">❤️</span>
+              <span>หัวใจ</span>
+              <span id="detailHeartCount" class="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[11px]">0</span>
+            </button>
+          </div>
+          <span id="detailCommentsCounter" class="text-xs font-semibold text-slate-500">0 ความคิดเห็น</span>
+        </div>
+
+        <!-- Comments Thread Section -->
+        <div class="space-y-3 pt-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">ความคิดเห็นต่อท้าย</h4>
+          <div id="detailCommentsList" class="space-y-2.5">
+            <!-- Populated dynamically -->
+          </div>
         </div>
       </div>
-      <form id="formComment" class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2">
-        <input id="inputCText" type="text" placeholder="แสดงความคิดเห็น..." class="flex-1 px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-indigo-500 transition" />
-        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition">ส่ง</button>
+
+      <!-- Bottom Form: Add a Follow-up Comment -->
+      <form id="formAddComment" class="p-4 bg-slate-50 border-t border-slate-200/80 flex flex-col gap-2">
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="inputCommentNickname" type="text" placeholder="ชื่อเล่นของคุณ *" class="sm:w-36 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500 shrink-0" />
+          <div class="flex-1 flex gap-2">
+            <input id="inputCommentText" type="text" placeholder="พิมพ์แสดงความคิดเห็น หรือวางลิงก์..." class="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-indigo-500" />
+            <button id="btnSubmitDetailComment" type="submit" class="px-4 py-2 rounded-xl bg-[#5848ff] hover:bg-[#4b3bf5] text-white text-xs font-semibold shrink-0 shadow-sm transition">
+              ส่ง
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: SETTINGS & ROOM CODE -->
-  <div id="modalSettings" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-700 animate-pop">
+  <!-- MODAL 3: Edit Board Title, Room Code Switcher & Cloud Settings -->
+  <div id="modalBoardSettings" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#1c2230] text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="font-bold text-base text-slate-100">ตั้งค่าชื่อห้อง / หัวข้อ</h3>
-        <button id="btnCloseSettings" type="button" class="text-slate-400 hover:text-slate-200 px-2 transition">✕</button>
+        <h3 class="text-base font-bold text-white">เข้ารหัสห้อง / ตั้งค่ากระดานกลุ่ม</h3>
+        <button id="btnCloseBoardModal" type="button" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-      <div class="space-y-3">
+      <div class="space-y-4">
+        <!-- Room Code Entry & Saved Group Pills -->
+        <div class="p-4 rounded-2xl bg-[#121723] border border-slate-800 space-y-3">
+          <div>
+            <label for="inputRoomCode" class="block text-xs font-bold text-indigo-300 mb-1">🔑 รหัสห้อง / รหัสกลุ่ม (ซิงค์แยกตามรหัสห้อง)</label>
+            <div class="flex gap-1.5">
+              <input id="inputRoomCode" type="text" placeholder="เช่น 101, กลุ่ม1, ม.2/1..." class="flex-1 px-3.5 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-sm font-bold text-white focus:outline-none focus:border-indigo-500" />
+              <button id="btnCopyShareUrl" type="button" class="px-3 py-2 rounded-xl bg-[#5848ff] hover:bg-[#4b3bf5] text-white text-xs font-semibold shrink-0 transition">
+                คัดลอกลิงก์ห้อง
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Switch Saved Rooms -->
+          <div>
+            <span class="block text-[11px] font-semibold text-slate-400 mb-1.5">สลับห้อง/กลุ่มด่วน:</span>
+            <div id="recentRoomsList" class="flex flex-wrap gap-1.5">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">รหัสห้องเรียน</label>
-          <input id="setRoomInput" type="text" class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-indigo-400 focus:outline-none focus:border-indigo-500 transition" />
+          <label for="inputBoardTitle" class="block text-xs font-semibold text-slate-300 mb-1">หัวข้อกระดานของห้องนี้</label>
+          <input id="inputBoardTitle" type="text" placeholder="ระบุชื่อหัวข้อกระดาน..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0c1018] border border-slate-700 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500" />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">ชื่อหัวข้อกระดาน</label>
-          <input id="setTitleInput" type="text" class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition" />
+          <label for="inputBoardSubtitle" class="block text-xs font-semibold text-slate-300 mb-1">คำอธิบายสั้นๆ</label>
+          <input id="inputBoardSubtitle" type="text" placeholder="คำชี้แจงหรือโจทย์สำหรับให้นักเรียนโพสต์..." class="w-full px-3.5 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500" />
+        </div>
+
+        <div>
+          <label for="inputCloudDbUrl" class="block text-[11px] font-semibold text-slate-400 mb-1">Firebase Realtime DB URL (ไม่บังคับ)</label>
+          <input id="inputCloudDbUrl" type="url" placeholder="https://your-project-default-rtdb.firebaseio.com" class="w-full px-3 py-1.5 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-indigo-500" />
         </div>
       </div>
-      <div class="mt-5 flex justify-end gap-2">
-        <button id="btnSaveSettings" type="button" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">บันทึก</button>
+      <div class="mt-5 flex items-center justify-between">
+        <button id="btnClearAllNotes" type="button" class="text-xs font-semibold text-rose-400 hover:underline">
+          ล้างโน้ตทั้งหมดบนกระดาน
+        </button>
+        <div class="flex gap-2">
+          <button id="btnSaveBoardSettings" type="button" class="px-5 py-2.5 rounded-xl bg-[#5848ff] hover:bg-[#4b3bf5] text-white text-xs font-semibold shadow-sm transition">
+            บันทึกหัวข้อ
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: PIN INPUT FOR DELETE -->
-  <div id="modalPin" class="fixed inset-0 z-[60] hidden bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-800 rounded-3xl max-w-xs w-full p-6 shadow-2xl border border-slate-700 animate-pop text-center">
-      <div class="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl mx-auto mb-3">🔒</div>
-      <h3 class="font-bold text-base text-slate-100 mb-1">ยืนยันการลบ</h3>
-      <p class="text-xs text-slate-400 mb-4">กรุณากรอกรหัสลับผู้ดูแลระบบ (8888)</p>
-      <input id="inputPin" type="password" inputmode="numeric" placeholder="รหัสลับ 4 หลัก" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-center tracking-widest text-lg font-bold text-slate-100 focus:outline-none focus:border-rose-500 transition mb-4" />
-      <div class="flex justify-center gap-2">
-        <button id="btnCancelPin" type="button" class="flex-1 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold transition">ยกเลิก</button>
-        <button id="btnConfirmPin" type="button" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold shadow-md transition">ยืนยันลบ</button>
-      </div>
+  <!-- MODAL 4: Fullscreen Image Lightbox -->
+  <div id="modalLightbox" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+      <button id="btnCloseLightbox" type="button" class="absolute -top-10 right-0 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-semibold transition">
+        ปิดรูปภาพ ✕
+      </button>
+      <img id="lightboxImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="ภาพขยาย" class="max-w-full max-h-[82vh] rounded-2xl shadow-2xl object-contain bg-white" />
     </div>
   </div>
+
+  <!-- MODAL 5: PIN 8888 Confirmation Modal for Deleting Note Boxes -->
+  <div id="modalDeletePin" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#1c2230] text-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-700/80 animate-pop">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h3 id="deletePinModalTitle" class="text-base font-bold text-white">ใส่รหัสผ่านเพื่อลบกล่อง</h3>
+        </div>
+        <button id="btnCloseDeletePin" type="button" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p id="deletePinModalDesc" class="text-xs text-slate-400 mb-4">
+        กรุณากรอกรหัสผ่านผู้ดูแลเพื่อยืนยันการลบกล่องความคิดเห็นนี้ออกจากกระดาน
+      </p>
+
+      <form id="formDeletePin" class="space-y-3">
+        <div>
+          <input id="inputDeletePin" type="password" inputmode="numeric" maxlength="8" placeholder="ใส่รหัสผ่าน..." class="w-full px-4 py-2.5 rounded-xl bg-[#0c1018] border border-slate-700 text-center tracking-widest text-base font-bold text-white focus:outline-none focus:border-rose-500 transition" />
+          <p id="deletePinError" class="hidden text-xs font-semibold text-rose-400 text-center mt-1.5">
+            รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง
+          </p>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button id="btnCancelDeletePin" type="button" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+            ยกเลิก
+          </button>
+          <button id="btnConfirmDeletePin" type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition">
+            ยืนยันการลบ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Subtle Toast Container -->
+  <div id="toastArea" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <script>
-    (function() {
-      const LS_KEY_PREFIX = 'CLASSROOM_ROOM_V4_';
-      const urlParams = new URLSearchParams(window.location.search);
-      let roomCode = (urlParams.get('room') || '').trim();
-      let userNickname = localStorage.getItem('CLASSROOM_NICK') || '';
+    (function () {
+      const LS_ROOM_PREFIX = 'WHITEBOARD_ROOM_STATE_V3_';
+      const LS_LEGACY_V2 = 'WHITEBOARD_SINGLE_PERMANENT_STATE_V2';
+      const LS_NICKNAME_KEY = 'WHITEBOARD_LAST_NICKNAME_V2';
+      const LS_SYNC_CFG_KEY = 'WHITEBOARD_CLOUD_SYNC_CFG_V3';
+      const IDB_NAME = 'ClassWhiteboardPermanentDB_V3';
+      const IDB_STORE = 'roomStore';
+      const IDB_MEDIA_STORE = 'mediaStore';
+      const DELETE_PASSCODE = '8888';
 
-      let state = null;
-      let selectedColor = 'yellow';
-      let activeDetailId = null;
-      let activeImageBase64 = '';
-      let pendingDeleteCallback = null;
-
-      if (roomCode && userNickname) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        initDashboard(roomCode);
-      } else {
-        if (roomCode) document.getElementById('loginRoomInput').value = roomCode;
-        if (userNickname) document.getElementById('loginNickInput').value = userNickname;
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
       }
 
-      function loadState(room) {
-        try {
-          const raw = localStorage.getItem(LS_KEY_PREFIX + room.toUpperCase());
-          if (raw) return JSON.parse(raw);
-        } catch(e){}
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomFromUrl = (urlParams.get('room') || '').trim();
+      const dbFromUrl = (urlParams.get('db') || '').trim();
+
+      let syncConfig = loadSyncConfig();
+      if (roomFromUrl) syncConfig.roomCode = roomFromUrl;
+      if (dbFromUrl) syncConfig.cloudDbUrl = dbFromUrl;
+      addRoomToHistory(syncConfig.roomCode);
+      saveSyncConfig();
+
+      function createDefaultRoomState(roomCode) {
         return {
-          room: room,
-          title: `ห้องเรียนออนไลน์ (${room})`,
+          roomCode: roomCode,
+          boardTitle: `กระดานแสดงความคิดเห็น (ห้อง ${roomCode})`,
+          boardSubtitle: 'คลิกที่โน้ตเพื่อแสดงความคิดเห็นต่อ กดไลก์ กดหัวใจ แนบลิงก์ YouTube รูปภาพ หรือไฟล์ได้ครบครัน',
+          theme: 'dark',
+          updatedAt: 0,
+          deletedIds: [],
           posts: []
         };
       }
 
-      function saveState() {
-        if (!state) return;
+      migrateLegacyStorageIfNeeded();
+
+      let state = loadRoomFromLocalStorage(syncConfig.roomCode);
+      let selectedColor = 'yellow';
+      let pendingImageDataUrl = '';
+      let editingPostId = null;
+      let activeDetailPostId = null;
+      let spawnCoordinates = null;
+      let pendingDeleteAction = null;
+      let gunInstance = null;
+      let gunRoomNode = null;
+
+      function migrateLegacyStorageIfNeeded() {
         try {
-          localStorage.setItem(LS_KEY_PREFIX + state.room.toUpperCase(), JSON.stringify(state));
-        } catch(e){}
+          const legacyRaw = localStorage.getItem(LS_LEGACY_V2);
+          if (legacyRaw) {
+            const legacyParsed = JSON.parse(legacyRaw);
+            if (legacyParsed && Array.isArray(legacyParsed.posts) && legacyParsed.posts.length > 0) {
+              const targetKey = getRoomStorageKey(syncConfig.roomCode);
+              const existingRoomRaw = localStorage.getItem(targetKey);
+              if (!existingRoomRaw) {
+                localStorage.setItem(targetKey, JSON.stringify(legacyParsed));
+              }
+            }
+          }
+        } catch (e) {}
       }
 
-      function initDashboard(room) {
-        roomCode = room.toUpperCase();
-        state = loadState(roomCode);
+      function loadSyncConfig() {
         try {
-          window.history.replaceState({}, '', '?room=' + encodeURIComponent(roomCode));
-        } catch(e) {}
-        render();
-        showToast(`ยินดีต้อนรับสู่ห้อง "${roomCode}"`);
+          const raw = localStorage.getItem(LS_SYNC_CFG_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.roomCode) {
+              if (!Array.isArray(parsed.recentRooms)) {
+                parsed.recentRooms = [parsed.roomCode, 'กลุ่ม 1', 'กลุ่ม 2', 'กลุ่ม 3'];
+              }
+              return parsed;
+            }
+          }
+        } catch (e) {}
+        return {
+          roomCode: '101',
+          cloudDbUrl: '',
+          recentRooms: ['101', 'กลุ่ม 1', 'กลุ่ม 2', 'กลุ่ม 3']
+        };
+      }
+
+      function addRoomToHistory(code) {
+        const clean = (code || '').trim();
+        if (!clean) return;
+        if (!Array.isArray(syncConfig.recentRooms)) syncConfig.recentRooms = [];
+        if (!syncConfig.recentRooms.includes(clean)) {
+          syncConfig.recentRooms.unshift(clean);
+          syncConfig.recentRooms = syncConfig.recentRooms.slice(0, 8);
+        }
+      }
+
+      function saveSyncConfig() {
+        try {
+          localStorage.setItem(LS_SYNC_CFG_KEY, JSON.stringify(syncConfig));
+        } catch (e) {}
+      }
+
+      function getRoomStorageKey(roomCode) {
+        return LS_ROOM_PREFIX + String(roomCode || '101').trim().toUpperCase();
+      }
+
+      // 1. Bulletproof Multi-Layer Persistence
+      function loadRoomFromLocalStorage(roomCode) {
+        const key = getRoomStorageKey(roomCode);
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.posts)) {
+              if (!Array.isArray(parsed.deletedIds)) parsed.deletedIds = [];
+              if (!parsed.theme) parsed.theme = 'dark';
+              return parsed;
+            }
+          }
+        } catch (err) {
+          console.warn('LocalStorage read warning:', err);
+        }
+        return createDefaultRoomState(roomCode);
+      }
+
+      function openIndexedDB() {
+        return new Promise(resolve => {
+          if (!window.indexedDB) {
+            resolve(null);
+            return;
+          }
+          const req = indexedDB.open(IDB_NAME, 2);
+          req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE);
+            }
+            if (!db.objectStoreNames.contains(IDB_MEDIA_STORE)) {
+              db.createObjectStore(IDB_MEDIA_STORE);
+            }
+          };
+          req.onsuccess = e => resolve(e.target.result);
+          req.onerror = () => resolve(null);
+        });
+      }
+
+      async function hydrateRoomFromIndexedDB(roomCode) {
+        const key = getRoomStorageKey(roomCode);
+        try {
+          const db = await openIndexedDB();
+          if (!db) return;
+          const tx = db.transaction(IDB_STORE, 'readonly');
+          const store = tx.objectStore(IDB_STORE);
+          const getReq = store.get(key);
+          getReq.onsuccess = () => {
+            if (roomCode !== syncConfig.roomCode) return;
+            if (getReq.result && Array.isArray(getReq.result.posts)) {
+              if (mergeIncomingState(getReq.result)) {
+                renderBoard();
+                if (activeDetailPostId) renderNoteDetailModal(activeDetailPostId);
+              }
+            }
+          };
+        } catch (err) {
+          console.warn('IndexedDB hydration skipped:', err);
+        }
+      }
+
+      async function switchRoom(newRoomCode) {
+        await saveLocalOnly();
+        const cleanCode = (newRoomCode || '').trim() || '101';
+        syncConfig.roomCode = cleanCode;
+        addRoomToHistory(cleanCode);
+        saveSyncConfig();
+
+        activeDetailPostId = null;
+        document.getElementById('modalNoteDetail').classList.add('hidden');
+
+        state = loadRoomFromLocalStorage(cleanCode);
+        renderBoard();
+        await hydrateRoomFromIndexedDB(cleanCode);
+        subscribeGunRoom();
+        pullFromCloudRest();
+
+        showToast(`เข้าสู่ห้อง "${cleanCode}" เรียบร้อยแล้ว`);
+      }
+
+      function mergeIncomingState(remote) {
+        if (!remote || typeof remote !== 'object') return false;
+        let changed = false;
+
+        const deletedSet = new Set(Array.isArray(state.deletedIds) ? state.deletedIds : []);
+        if (Array.isArray(remote.deletedIds)) {
+          remote.deletedIds.forEach(id => {
+            if (id && !deletedSet.has(id)) {
+              deletedSet.add(id);
+              changed = true;
+            }
+          });
+        }
+        state.deletedIds = Array.from(deletedSet);
+
+        const beforeFilterLen = state.posts.length;
+        state.posts = state.posts.filter(p => p && p.id && !deletedSet.has(p.id));
+        if (state.posts.length !== beforeFilterLen) changed = true;
+
+        if ((remote.updatedAt || 0) > (state.updatedAt || 0)) {
+          if (remote.boardTitle && remote.boardTitle !== state.boardTitle) {
+            state.boardTitle = remote.boardTitle;
+            changed = true;
+          }
+          if (typeof remote.boardSubtitle === 'string' && remote.boardSubtitle !== state.boardSubtitle) {
+            state.boardSubtitle = remote.boardSubtitle;
+            changed = true;
+          }
+          if (remote.theme && remote.theme !== state.theme) {
+            state.theme = remote.theme;
+            changed = true;
+          }
+          state.updatedAt = remote.updatedAt;
+        }
+
+        if (Array.isArray(remote.posts)) {
+          remote.posts.forEach(rPost => {
+            if (mergeSinglePost(rPost, deletedSet)) {
+              changed = true;
+            }
+          });
+        }
+
+        if (changed) {
+          saveLocalOnly();
+        }
+        return changed;
+      }
+
+      function mergeSinglePost(rPost, deletedSetInput) {
+        if (!rPost || !rPost.id) return false;
+        const deletedSet = deletedSetInput || new Set(Array.isArray(state.deletedIds) ? state.deletedIds : []);
+        if (deletedSet.has(rPost.id)) return false;
+
+        let changed = false;
+        const lPost = state.posts.find(p => p.id === rPost.id);
+        if (!lPost) {
+          const clone = JSON.parse(JSON.stringify(rPost));
+          if (!Array.isArray(clone.comments)) clone.comments = [];
+          state.posts.push(clone);
+          changed = true;
+        } else {
+          if ((rPost.likes || 0) > (lPost.likes || 0)) {
+            lPost.likes = rPost.likes;
+            changed = true;
+          }
+          if ((rPost.hearts || 0) > (lPost.hearts || 0)) {
+            lPost.hearts = rPost.hearts;
+            changed = true;
+          }
+          if ((rPost.updatedAtMs || 0) > (lPost.updatedAtMs || 0)) {
+            lPost.nickname = rPost.nickname || lPost.nickname;
+            lPost.text = rPost.text !== undefined ? rPost.text : lPost.text;
+            lPost.color = rPost.color || lPost.color;
+            if (rPost.image) lPost.image = rPost.image;
+            if (rPost.youtubeUrl !== undefined) lPost.youtubeUrl = rPost.youtubeUrl;
+            if (rPost.externalUrl !== undefined) lPost.externalUrl = rPost.externalUrl;
+            if (rPost.externalTitle !== undefined) lPost.externalTitle = rPost.externalTitle;
+            if (typeof rPost.x === 'number') lPost.x = rPost.x;
+            if (typeof rPost.y === 'number') lPost.y = rPost.y;
+            lPost.updatedAtMs = rPost.updatedAtMs;
+            changed = true;
+          } else if (!lPost.image && rPost.image) {
+            lPost.image = rPost.image;
+            changed = true;
+          }
+          const lComments = Array.isArray(lPost.comments) ? lPost.comments : [];
+          const rComments = Array.isArray(rPost.comments) ? rPost.comments : [];
+          const cMap = new Map(lComments.map(c => [c.id, c]));
+          rComments.forEach(rc => {
+            if (rc && rc.id && !deletedSet.has(rc.id) && !cMap.has(rc.id)) {
+              lComments.push(rc);
+              changed = true;
+            }
+          });
+          lPost.comments = lComments.filter(c => !deletedSet.has(c.id));
+        }
+        return changed;
+      }
+
+      async function saveLocalOnly() {
+        const key = getRoomStorageKey(syncConfig.roomCode);
+        try {
+          localStorage.setItem(key, JSON.stringify(state));
+        } catch (quotaErr) {
+          try {
+            const compactState = Object.assign({}, state, {
+              posts: state.posts.map(p => {
+                if (p.image && p.image.startsWith('data:') && p.image.length > 35000) {
+                  return Object.assign({}, p);
+                }
+                return p;
+              })
+            });
+            localStorage.setItem(key, JSON.stringify(compactState));
+          } catch (e2) {}
+        }
+
+        try {
+          const db = await openIndexedDB();
+          if (!db) return;
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put(JSON.parse(JSON.stringify(state)), key);
+        } catch (err) {
+          console.warn('IndexedDB write warning:', err);
+        }
+      }
+
+      async function persistStatePermanently(changedPost) {
+        state.updatedAt = Date.now();
+        await saveLocalOnly();
+        broadcastStateToCloud(changedPost);
+      }
+
+      // 2. Per-Post & Per-Room Cloud Sync Engine
+      function initCrossDeviceSync() {
+        try {
+          if (window.Gun) {
+            gunInstance = window.Gun({
+              peers: [
+                'https://gun-manhattan.herokuapp.com/gun',
+                'https://peer.wallie.io/gun'
+              ],
+              localStorage: false
+            });
+            subscribeGunRoom();
+          }
+        } catch (e) {
+          console.warn('Gun relay init skipped:', e);
+        }
+
+        window.addEventListener('storage', e => {
+          const currentKey = getRoomStorageKey(syncConfig.roomCode);
+          if (e.key === currentKey && e.newValue) {
+            try {
+              const incoming = JSON.parse(e.newValue);
+              if (mergeIncomingState(incoming)) {
+                renderBoard();
+                if (activeDetailPostId) renderNoteDetailModal(activeDetailPostId);
+              }
+            } catch (err) {}
+          }
+        });
+
+        pullFromCloudRest();
+        setInterval(pullFromCloudRest, 4500);
+      }
+
+      function subscribeGunRoom() {
+        if (!gunInstance) return;
+        const activeRoom = (syncConfig.roomCode || '101').trim().toUpperCase();
+        const roomKey = 'classboard_v4_room_' + activeRoom;
+        gunRoomNode = gunInstance.get(roomKey);
+
+        gunRoomNode.get('posts').map().on((postJson, postId) => {
+          if (activeRoom !== (syncConfig.roomCode || '101').trim().toUpperCase()) return;
+          if (!postJson) return;
+          if (postJson === 'DELETED') {
+            if (!Array.isArray(state.deletedIds)) state.deletedIds = [];
+            if (!state.deletedIds.includes(postId)) {
+              state.deletedIds.push(postId);
+              state.posts = state.posts.filter(p => p.id !== postId);
+              saveLocalOnly();
+              renderBoard();
+            }
+            return;
+          }
+          try {
+            const rPost = typeof postJson === 'string' ? JSON.parse(postJson) : postJson;
+            if (mergeSinglePost(rPost)) {
+              saveLocalOnly();
+              renderBoard();
+              if (activeDetailPostId === rPost.id) renderNoteDetailModal(rPost.id);
+            }
+          } catch (e) {}
+        });
+
+        gunRoomNode.get('meta').on(metaJson => {
+          if (!metaJson || typeof metaJson !== 'string') return;
+          try {
+            const meta = JSON.parse(metaJson);
+            if (mergeIncomingState(meta)) {
+              renderBoard();
+            }
+          } catch (e) {}
+        });
+      }
+
+      function getRestEndpointUrl() {
+        const roomSafe = encodeURIComponent((syncConfig.roomCode || '101').trim().toUpperCase());
+        if (syncConfig.cloudDbUrl) {
+          const base = syncConfig.cloudDbUrl.replace(/\/+$/, '');
+          if (base.includes('firebaseio.com') || base.includes('firebasedatabase.app')) {
+            return `${base}/classboards/${roomSafe}.json`;
+          }
+          return `${base}?room=${roomSafe}`;
+        }
+        return '';
+      }
+
+      async function pullFromCloudRest() {
+        const endpoint = getRestEndpointUrl();
+        if (endpoint) {
+          try {
+            const res = await fetch(endpoint, { method: 'GET' });
+            if (res.ok) {
+              const data = await res.json();
+              if (data && mergeIncomingState(data)) {
+                renderBoard();
+                if (activeDetailPostId) renderNoteDetailModal(activeDetailPostId);
+              }
+            }
+          } catch (e) {}
+        }
+
+        if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('googleusercontent')) {
+          try {
+            const roomSafe = encodeURIComponent((syncConfig.roomCode || '101').trim().toUpperCase());
+            const res = await fetch(window.location.origin + '/api/' + 'board?room=' + roomSafe, { method: 'GET' });
+            if (res.ok) {
+              const data = await res.json();
+              if (data && Array.isArray(data.posts) && mergeIncomingState(data)) {
+                renderBoard();
+                if (activeDetailPostId) renderNoteDetailModal(activeDetailPostId);
+              }
+            }
+          } catch (e) {}
+        }
+      }
+
+      async function broadcastStateToCloud(changedPost) {
+        try {
+          if (gunRoomNode) {
+            gunRoomNode.get('meta').put(
+              JSON.stringify({
+                boardTitle: state.boardTitle,
+                boardSubtitle: state.boardSubtitle,
+                theme: state.theme,
+                updatedAt: state.updatedAt,
+                deletedIds: state.deletedIds
+              })
+            );
+            if (changedPost && changedPost.id) {
+              gunRoomNode.get('posts').get(changedPost.id).put(JSON.stringify(changedPost));
+            } else {
+              state.posts.forEach(p => {
+                gunRoomNode.get('posts').get(p.id).put(JSON.stringify(p));
+              });
+            }
+          }
+        } catch (e) {}
+
+        const serialized = JSON.stringify(state);
+
+        const endpoint = getRestEndpointUrl();
+        if (endpoint) {
+          try {
+            await fetch(endpoint, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: serialized
+            });
+          } catch (e) {}
+        }
+
+        if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('googleusercontent')) {
+          try {
+            const roomSafe = encodeURIComponent((syncConfig.roomCode || '101').trim().toUpperCase());
+            await fetch(window.location.origin + '/api/' + 'board?room=' + roomSafe, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: serialized
+            });
+          } catch (e) {}
+        }
+      }
+
+      function getSavedNickname() {
+        try {
+          return localStorage.getItem(LS_NICKNAME_KEY) || '';
+        } catch (e) {
+          return '';
+        }
+      }
+
+      function saveNickname(name) {
+        try {
+          localStorage.setItem(LS_NICKNAME_KEY, name);
+        } catch (e) {}
+        const badge = document.getElementById('activeStudentNameBadge');
+        if (badge && name) badge.textContent = name;
+      }
+
+      // 3. Helper Functions, URL/YouTube Parsers & Reaction Burst Animations
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function formatTextWithLinks(text) {
+        const escaped = escapeHtml(text || '');
+        return escaped.replace(
+          /(https?:\/\/[^\s<]+)/g,
+          '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline hover:text-indigo-800 break-all" onclick="event.stopPropagation()">$1</a>'
+        );
+      }
+
+      function extractYoutubeId(urlStr) {
+        if (!urlStr) return '';
+        const str = String(urlStr).trim();
+        const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+        const match = str.match(regExp);
+        return match && match[1] ? match[1] : '';
+      }
+
+      function detectYoutubeUrlInText(text) {
+        if (!text) return '';
+        const match = String(text).match(/https?:\/\/(?:www\.)?(?:youtube\.com\/[^\s]+|youtu\.be\/[^\s]+)/i);
+        return match ? match[0] : '';
+      }
+
+      function detectImageUrlInText(text) {
+        if (!text) return '';
+        const match = String(text).match(/https?:\/\/[^\s]+\.(?:png|jpe?g|gif|webp|svg)(?:\?[^\s]*)?/i);
+        return match ? match[0] : '';
+      }
+
+      function triggerReactionAnimation(btnEl, type) {
+        if (!btnEl) return;
+        btnEl.classList.remove('animate-reaction-pop');
+        void btnEl.offsetWidth;
+        btnEl.classList.add('animate-reaction-pop');
+
+        const rect = btnEl.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const ripple = document.createElement('div');
+        ripple.className = 'reaction-ripple';
+        ripple.style.left = `${centerX - 14}px`;
+        ripple.style.top = `${centerY - 14}px`;
+        ripple.style.border = type === 'heart' ? '2.5px solid #f43f5e' : '2.5px solid #3b82f6';
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+
+        const emojis = type === 'heart'
+          ? ['❤️', '💖', '💗', '✨', '🌸']
+          : ['👍', '✨', '💙', '🎉', '⭐'];
+
+        for (let i = 0; i < 6; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'reaction-particle';
+          particle.textContent = emojis[i % emojis.length];
+          const offsetX = (Math.random() - 0.5) * 34;
+          const midX = (Math.random() - 0.5) * 56;
+          const endX = (Math.random() - 0.5) * 80;
+          const rot = (Math.random() - 0.5) * 40;
+          const rotEnd = (Math.random() - 0.5) * 70;
+
+          particle.style.left = `${centerX + offsetX - 12}px`;
+          particle.style.top = `${centerY - 14}px`;
+          particle.style.setProperty('--tx-mid', `${midX}px`);
+          particle.style.setProperty('--tx-end', `${endX}px`);
+          particle.style.setProperty('--rot', `${rot}deg`);
+          particle.style.setProperty('--rot-end', `${rotEnd}deg`);
+          particle.style.animationDelay = `${i * 0.04}s`;
+
+          document.body.appendChild(particle);
+          setTimeout(() => particle.remove(), 1050);
+        }
       }
 
       function showToast(msg) {
-        const t = document.createElement('div');
-        t.className = 'fixed bottom-5 left-5 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-semibold shadow-lg animate-pop';
-        t.textContent = msg;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 2000);
+        const area = document.getElementById('toastArea');
+        const el = document.createElement('div');
+        el.className = 'px-4 py-2.5 rounded-2xl bg-slate-900/95 border border-slate-700 text-white text-xs font-semibold shadow-lg animate-pop';
+        el.textContent = msg;
+        area.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.25s ease';
+          setTimeout(() => el.remove(), 250);
+        }, 2200);
       }
 
-      function requestPinAndDelete(callback) {
-        pendingDeleteCallback = callback;
-        document.getElementById('inputPin').value = '';
-        document.getElementById('modalPin').classList.remove('hidden');
-        setTimeout(() => document.getElementById('inputPin').focus(), 100);
+      function requestPinProtectedDelete(titleText, descText, onConfirmCallback) {
+        pendingDeleteAction = onConfirmCallback;
+        document.getElementById('deletePinModalTitle').textContent = titleText || 'ใส่รหัสผ่านเพื่อลบกล่อง';
+        document.getElementById('deletePinModalDesc').textContent =
+          descText || 'กรุณากรอกรหัสผ่านเพื่อยืนยันการลบกล่องความคิดเห็นนี้ออกจากกระดาน';
+        const pinInput = document.getElementById('inputDeletePin');
+        pinInput.value = '';
+        document.getElementById('deletePinError').classList.add('hidden');
+        document.getElementById('modalDeletePin').classList.remove('hidden');
+        setTimeout(() => pinInput.focus(), 60);
       }
 
-      // Helper to parse YouTube Embed URL
-      function getYoutubeEmbedUrl(url) {
-        if (!url) return '';
-        let videoId = '';
-        if (url.includes('youtu.be/')) {
-          videoId = url.split('youtu.be/')[1]?.split('?')[0];
-        } else if (url.includes('watch?v=')) {
-          videoId = url.split('watch?v=')[1]?.split('&')[0];
-        } else if (url.includes('embed/')) {
-          videoId = url.split('embed/')[1]?.split('?')[0];
-        }
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+      function compressImageFile(file, maxWidth = 640, quality = 0.74) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = ev => {
+            const img = new Image();
+            img.onload = () => {
+              let w = img.width;
+              let h = img.height;
+              if (w > maxWidth) {
+                h = Math.round((h * maxWidth) / w);
+                w = maxWidth;
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = ev.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
       }
 
-      function render() {
-        if (!state) return;
-        document.getElementById('boardTitle').textContent = state.title;
-        document.getElementById('lblRoom').textContent = state.room;
-        document.getElementById('lblCurrentRoomBadge').textContent = 'ห้อง: ' + state.room;
+      function getCardStyle(color) {
+        const styles = {
+          yellow: 'bg-[#fef9c3] border-[#fde047]/80 text-slate-900',
+          white: 'bg-white border-slate-200/90 text-slate-900',
+          pink: 'bg-[#fce7f3] border-[#f9a8d4]/80 text-slate-900',
+          blue: 'bg-[#e0f2fe] border-[#7dd3fc]/80 text-slate-900',
+          green: 'bg-[#dcfce7] border-[#86efac]/80 text-slate-900',
+          purple: 'bg-[#f3e8ff] border-[#d8b4fe]/80 text-slate-900'
+        };
+        return styles[color] || styles.yellow;
+      }
 
-        const container = document.getElementById('notesContainer');
-        const emptyState = document.getElementById('emptyState');
+      function renderRecentRoomPills() {
+        const container = document.getElementById('recentRoomsList');
+        if (!container) return;
         container.innerHTML = '';
+        const rooms = Array.isArray(syncConfig.recentRooms) ? syncConfig.recentRooms : ['101'];
+        rooms.forEach(rCode => {
+          const isCurrent = rCode === syncConfig.roomCode;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = isCurrent
+            ? 'px-3 py-1 rounded-xl bg-[#5848ff] text-white text-xs font-bold shadow-sm'
+            : 'px-3 py-1 rounded-xl bg-[#0c1018] hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold transition';
+          btn.textContent = `ห้อง ${rCode}`;
+          btn.addEventListener('click', () => {
+            document.getElementById('inputRoomCode').value = rCode;
+            switchRoom(rCode);
+            renderRecentRoomPills();
+          });
+          container.appendChild(btn);
+        });
+      }
+
+      // 4. Render Whiteboard & Notes
+      function renderBoard() {
+        document.getElementById('boardTitleText').textContent = state.boardTitle || `กระดานแสดงความคิดเห็น (ห้อง ${syncConfig.roomCode})`;
+        document.getElementById('boardSubtitleText').textContent = state.boardSubtitle || '';
+        document.getElementById('currentRoomBadgeText').textContent = syncConfig.roomCode;
+        document.getElementById('emptyStateRoomLabel').textContent = syncConfig.roomCode;
+        document.getElementById('syncStatusLabel').textContent = 'บันทึก';
+
+        const savedNick = getSavedNickname();
+        if (savedNick) {
+          document.getElementById('activeStudentNameBadge').textContent = savedNick;
+        }
+
+        const surface = document.getElementById('whiteboardSurface');
+        surface.className = 'whiteboard-canvas flex-1 relative w-full min-h-[calc(100vh-65px)] overflow-auto';
+        const activeTheme = state.theme || 'dark';
+        if (activeTheme !== 'default') {
+          surface.classList.add(`theme-${activeTheme}`);
+        }
+
+        const emptyState = document.getElementById('emptyBoardState');
+        const notesLayer = document.getElementById('notesLayer');
+        notesLayer.innerHTML = '';
 
         if (!state.posts || state.posts.length === 0) {
           emptyState.classList.remove('hidden');
@@ -305,315 +1320,875 @@
         }
         emptyState.classList.add('hidden');
 
-        state.posts.forEach((p, idx) => {
+        const isMobile = window.innerWidth < 768;
+
+        state.posts.forEach((post, idx) => {
+          if (!Array.isArray(post.comments)) post.comments = [];
+          if (typeof post.likes !== 'number') post.likes = 0;
+          if (typeof post.hearts !== 'number') post.hearts = 0;
+
           const card = document.createElement('article');
-          const colors = {
-            yellow: 'bg-amber-900/40 border-amber-700/50 text-amber-50',
-            white: 'bg-slate-800 border-slate-600 text-slate-100',
-            pink: 'bg-pink-900/40 border-pink-700/50 text-pink-50',
-            blue: 'bg-sky-900/40 border-sky-700/50 text-sky-50',
-            green: 'bg-emerald-900/40 border-emerald-700/50 text-emerald-50'
-          };
-          const colorCls = colors[p.color] || colors.yellow;
-          const x = p.x ?? (30 + (idx % 4) * 310);
-          const y = p.y ?? (30 + Math.floor(idx / 4) * 280);
+          const colorCls = getCardStyle(post.color);
 
-          card.className = `note-card absolute w-[290px] rounded-2xl border ${colorCls} p-4 flex flex-col cursor-pointer backdrop-blur-sm`;
-          card.style.left = x + 'px';
-          card.style.top = y + 'px';
-
-          const initial = (p.nick || 'น').charAt(0).toUpperCase();
-          const commentsCount = (p.comments || []).length;
-          const ytEmbed = getYoutubeEmbedUrl(p.youtube);
-
-          let mediaHtml = '';
-          if (ytEmbed) {
-            mediaHtml = `<div class="mb-2 rounded-xl overflow-hidden bg-black aspect-video border border-white/10"><iframe src="${ytEmbed}" class="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-          } else if (p.img) {
-            mediaHtml = `<div class="mb-2 rounded-xl overflow-hidden bg-slate-900 border border-white/10"><img src="${p.img}" class="w-full h-32 object-cover" /></div>`;
+          if (isMobile) {
+            card.className = `note-card w-full rounded-3xl border ${colorCls} p-5 mb-4 flex flex-col animate-pop`;
+          } else {
+            const x = typeof post.x === 'number' ? post.x : 36 + (idx % 4) * 330;
+            const y = typeof post.y === 'number' ? post.y : 36 + Math.floor(idx / 4) * 320;
+            card.className = `note-card absolute w-[315px] rounded-3xl border ${colorCls} p-5 flex flex-col cursor-grab active:cursor-grabbing`;
+            card.style.left = `${x}px`;
+            card.style.top = `${y}px`;
+            card.style.zIndex = String(10 + idx);
           }
 
+          const initial = (post.nickname || 'น').trim().charAt(0).toUpperCase();
+          const latestComment = post.comments.length > 0 ? post.comments[post.comments.length - 1] : null;
+          const ytId = extractYoutubeId(post.youtubeUrl || detectYoutubeUrlInText(post.text));
+
           card.innerHTML = `
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <div class="w-7 h-7 rounded-full bg-white/20 font-bold text-xs flex items-center justify-center text-white">${initial}</div>
-                <div class="font-bold text-xs truncate">${escapeHtml(p.nick)}</div>
+            <!-- Author Header -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-slate-900/10 text-slate-900 font-bold text-xs flex items-center justify-center shrink-0">
+                  ${escapeHtml(initial)}
+                </div>
+                <div class="min-w-0">
+                  <div class="font-bold text-sm text-slate-900 truncate">${escapeHtml(post.nickname)}</div>
+                  <div class="text-[11px] text-slate-500">${escapeHtml(post.time || '')}</div>
+                </div>
               </div>
-              <button type="button" class="btn-del w-7 h-7 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 font-bold text-xs flex items-center justify-center transition shrink-0 z-20 cursor-pointer" title="ลบโพสต์ (ต้องใช้รหัส 8888)">✕</button>
+
+              <!-- Edit & Delete Icons -->
+              <div class="flex items-center gap-0.5 shrink-0">
+                <button type="button" class="btn-edit-note p-1.5 rounded-xl hover:bg-black/5 text-slate-500 hover:text-slate-900 transition" title="แก้ไขโน้ต">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+                <button type="button" class="btn-delete-note p-1.5 rounded-xl hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 transition" title="ลบกล่อง (ต้องใช้รหัสผ่าน)">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            ${mediaHtml}
-            ${p.text ? `<p class="text-xs text-inherit opacity-90 line-clamp-3 mb-2 whitespace-pre-line">${escapeHtml(p.text)}</p>` : ''}
-            <div class="mt-auto pt-2 flex items-center justify-between text-[11px] font-semibold opacity-75 border-t border-white/10">
-              <span>👍 ${p.likes || 0} ❤️ ${p.hearts || 0}</span>
-              <span class="">💬 ${commentsCount} ความคิดเห็น</span>
+
+            <!-- Clickable Content Area -->
+            <div class="note-clickable-body cursor-pointer group">
+              ${
+                post.image
+                  ? `<div class="mb-3 rounded-2xl overflow-hidden border border-black/5 bg-white/60">
+                       <img src="${escapeHtml(post.image)}" alt="รูปภาพประกอบ" class="note-image w-full max-h-48 object-cover group-hover:scale-[1.01] transition" />
+                     </div>`
+                  : ''
+              }
+              ${
+                ytId
+                  ? `<div class="mb-3 rounded-2xl overflow-hidden border border-black/10 bg-black aspect-video relative" onclick="event.stopPropagation()">
+                       <iframe class="w-full h-full" src="https://www.youtube.com/embed/${escapeHtml(ytId)}" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                     </div>`
+                  : ''
+              }
+              ${
+                post.externalUrl
+                  ? `<a href="${escapeHtml(post.externalUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mb-3 p-2.5 rounded-2xl bg-white/80 hover:bg-white border border-black/10 flex items-center gap-2 text-xs font-semibold text-indigo-700 transition shadow-sm">
+                       <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">🔗</span>
+                       <span class="truncate flex-1">${escapeHtml(post.externalTitle || post.externalUrl)}</span>
+                       <span class="text-[10px] text-slate-400 shrink-0">เปิดลิงก์ ↗</span>
+                     </a>`
+                  : ''
+              }
+              ${
+                post.text
+                  ? `<div class="text-sm text-slate-800 whitespace-pre-line leading-relaxed break-words mb-3">${formatTextWithLinks(post.text)}</div>`
+                  : ''
+              }
+            </div>
+
+            <!-- Latest Comment Preview (if any) -->
+            ${
+              latestComment
+                ? `<div class="btn-open-comments mb-2.5 px-3 py-2 rounded-2xl bg-white/65 hover:bg-white/90 border border-black/5 text-xs cursor-pointer transition">
+                     <div class="font-bold text-slate-800 truncate">💬 ${escapeHtml(latestComment.nickname)}</div>
+                     <div class="text-slate-600 truncate">${escapeHtml(latestComment.text)}</div>
+                   </div>`
+                : ''
+            }
+
+            <!-- Footer: Animated Like (👍), Animated Heart (❤️), and Reply (💬) -->
+            <div class="mt-auto pt-2.5 flex items-center justify-between gap-1.5 border-t border-black/5">
+              <div class="flex items-center gap-1.5">
+                <button type="button" class="btn-like-note inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs font-bold text-blue-700 shadow-sm transition" title="กดถูกใจ">
+                  <span class="text-sm">👍</span>
+                  <span class="like-count-span">${post.likes || 0}</span>
+                </button>
+                <button type="button" class="btn-heart-note inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs font-bold text-rose-600 shadow-sm transition" title="กดหัวใจ">
+                  <span class="text-sm">❤️</span>
+                  <span class="heart-count-span">${post.hearts || 0}</span>
+                </button>
+              </div>
+
+              <button type="button" class="btn-open-comments inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/80 hover:bg-white text-xs font-semibold text-indigo-700 shadow-sm transition">
+                <span>💬</span>
+                <span>${post.comments.length > 0 ? `${post.comments.length} ความคิดเห็น` : 'ความคิดเห็น'}</span>
+              </button>
             </div>
           `;
 
-          // Handle Delete Button explicitly requiring PIN 8888
-          const deleteBtn = card.querySelector('.btn-del');
-          deleteBtn.addEventListener('click', (e) => {
+          const likeBtn = card.querySelector('.btn-like-note');
+          likeBtn.addEventListener('click', e => {
             e.stopPropagation();
-            e.preventDefault();
-            requestPinAndDelete(() => {
-              state.posts = state.posts.filter(item => item.id !== p.id);
-              saveState();
-              render();
-              showToast('ลบโพสต์เรียบร้อยแล้ว');
+            post.likes = (post.likes || 0) + 1;
+            post.updatedAtMs = Date.now();
+            likeBtn.querySelector('.like-count-span').textContent = post.likes;
+            triggerReactionAnimation(likeBtn, 'like');
+            persistStatePermanently(post);
+          });
+
+          const heartBtn = card.querySelector('.btn-heart-note');
+          heartBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            post.hearts = (post.hearts || 0) + 1;
+            post.updatedAtMs = Date.now();
+            heartBtn.querySelector('.heart-count-span').textContent = post.hearts;
+            triggerReactionAnimation(heartBtn, 'heart');
+            persistStatePermanently(post);
+          });
+
+          card.querySelectorAll('.btn-open-comments').forEach(el => {
+            el.addEventListener('click', e => {
+              e.stopPropagation();
+              openNoteDetailModal(post.id);
             });
           });
 
-          card.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-del')) return;
-            openDetail(p.id);
+          card.querySelector('.btn-edit-note').addEventListener('click', e => {
+            e.stopPropagation();
+            openPostModal(post);
           });
 
-          container.appendChild(card);
+          card.querySelector('.btn-delete-note').addEventListener('click', e => {
+            e.stopPropagation();
+            requestPinProtectedDelete(
+              'ใส่รหัสผ่านเพื่อลบกล่อง',
+              `กรุณาใส่รหัสผ่านเพื่อลบกล่องความคิดเห็นของ "${post.nickname}"`,
+              () => {
+                if (!Array.isArray(state.deletedIds)) state.deletedIds = [];
+                state.deletedIds.push(post.id);
+                state.posts = state.posts.filter(p => p.id !== post.id);
+                try {
+                  if (gunRoomNode) gunRoomNode.get('posts').get(post.id).put('DELETED');
+                } catch (err) {}
+                persistStatePermanently();
+                renderBoard();
+                showToast('ลบกล่องความคิดเห็นออกจากกระดานแล้ว');
+              }
+            );
+          });
+
+          if (!isMobile) {
+            makeCardDraggableOrClickable(card, post);
+          } else {
+            card.querySelector('.note-clickable-body').addEventListener('click', () => {
+              openNoteDetailModal(post.id);
+            });
+          }
+
+          notesLayer.appendChild(card);
         });
       }
 
-      function escapeHtml(str) {
-        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      }
+      function makeCardDraggableOrClickable(cardEl, postObj) {
+        let pointerDown = false;
+        let hasMoved = false;
+        let startX = 0;
+        let startY = 0;
+        let origLeft = 0;
+        let origTop = 0;
 
-      function triggerReactionAnimation(emoji, targetElement) {
-        const rect = targetElement.getBoundingClientRect();
-        const el = document.createElement('div');
-        el.className = 'fixed z-50 text-xl pointer-events-none transition-all duration-700 ease-out';
-        el.textContent = emoji;
-        el.style.left = (rect.left + rect.width / 2 - 10) + 'px';
-        el.style.top = rect.top + 'px';
-        document.body.appendChild(el);
-
-        requestAnimationFrame(() => {
-          el.style.transform = `translateY(-60px) scale(1.4) rotate(${Math.random() * 40 - 20}deg)`;
-          el.style.opacity = '0';
+        cardEl.addEventListener('pointerdown', e => {
+          if (e.target.closest('button') || e.target.closest('a') || e.target.closest('iframe')) return;
+          pointerDown = true;
+          hasMoved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          origLeft = parseInt(cardEl.style.left, 10) || 0;
+          origTop = parseInt(cardEl.style.top, 10) || 0;
+          cardEl.setPointerCapture(e.pointerId);
         });
 
-        setTimeout(() => el.remove(), 700);
+        cardEl.addEventListener('pointermove', e => {
+          if (!pointerDown) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+            hasMoved = true;
+            cardEl.classList.add('dragging');
+            cardEl.style.left = `${Math.max(16, origLeft + dx)}px`;
+            cardEl.style.top = `${Math.max(16, origTop + dy)}px`;
+          }
+        });
+
+        const finishPointer = e => {
+          if (!pointerDown) return;
+          pointerDown = false;
+          cardEl.classList.remove('dragging');
+          if (hasMoved) {
+            postObj.x = parseInt(cardEl.style.left, 10) || 24;
+            postObj.y = parseInt(cardEl.style.top, 10) || 24;
+            postObj.updatedAtMs = Date.now();
+            persistStatePermanently(postObj);
+          } else if (!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('iframe')) {
+            openNoteDetailModal(postObj.id);
+          }
+        };
+
+        cardEl.addEventListener('pointerup', finishPointer);
+        cardEl.addEventListener('pointercancel', () => {
+          pointerDown = false;
+          cardEl.classList.remove('dragging');
+        });
       }
 
-      document.getElementById('formLogin').addEventListener('submit', e => {
-        e.preventDefault();
-        const r = document.getElementById('loginRoomInput').value.trim();
-        const n = document.getElementById('loginNickInput').value.trim();
-        if (!r || !n) return;
-
-        userNickname = n;
-        localStorage.setItem('CLASSROOM_NICK', userNickname);
-        document.getElementById('loginScreen').classList.add('hidden');
-        initDashboard(r);
-      });
-
-      document.getElementById('btnSwitchRoom').addEventListener('click', () => {
-        document.getElementById('loginRoomInput').value = state ? state.room : '';
-        document.getElementById('loginNickInput').value = userNickname;
-        document.getElementById('loginScreen').classList.remove('hidden');
-      });
-
-      function openPostModal() {
-        activeImageBase64 = '';
-        document.getElementById('inputText').value = '';
-        document.getElementById('inputYoutube').value = '';
-        document.getElementById('inputImgFile').value = '';
-        document.getElementById('modalPost').classList.remove('hidden');
+      // 5. Note Detail & Follow-up Comments Modal
+      function openNoteDetailModal(postId) {
+        activeDetailPostId = postId;
+        renderNoteDetailModal(postId);
+        const nickInput = document.getElementById('inputCommentNickname');
+        if (!nickInput.value) {
+          nickInput.value = getSavedNickname();
+        }
+        document.getElementById('modalNoteDetail').classList.remove('hidden');
+        setTimeout(() => {
+          if (!nickInput.value) nickInput.focus();
+          else document.getElementById('inputCommentText').focus();
+        }, 60);
       }
 
-      function openDetail(id) {
-        activeDetailId = id;
-        renderDetail();
-        document.getElementById('modalDetail').classList.remove('hidden');
-      }
-
-      function renderDetail() {
-        const p = state.posts.find(item => item.id === activeDetailId);
-        if (!p) {
-          document.getElementById('modalDetail').classList.add('hidden');
+      function renderNoteDetailModal(postId) {
+        const post = state.posts.find(p => p.id === postId);
+        if (!post) {
+          document.getElementById('modalNoteDetail').classList.add('hidden');
           return;
         }
-        document.getElementById('detailInit').textContent = (p.nick || 'น').charAt(0).toUpperCase();
-        document.getElementById('detailName').textContent = p.nick;
-        document.getElementById('detailTime').textContent = p.time || '';
-        document.getElementById('detailText').textContent = p.text || '';
-        document.getElementById('likeCount').textContent = p.likes || 0;
-        document.getElementById('heartCount').textContent = p.hearts || 0;
+        if (!Array.isArray(post.comments)) post.comments = [];
 
-        const mediaWrap = document.getElementById('detailMediaWrap');
-        mediaWrap.innerHTML = '';
-        const ytEmbed = getYoutubeEmbedUrl(p.youtube);
+        const headerEl = document.getElementById('detailCardHeader');
+        headerEl.className = `px-6 pt-5 pb-4 border-b border-black/5 flex items-start justify-between gap-3 ${getCardStyle(post.color)}`;
 
-        if (ytEmbed) {
-          mediaWrap.innerHTML = `<div class="aspect-video w-full bg-black"><iframe src="${ytEmbed}" class="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-          mediaWrap.classList.remove('hidden');
-        } else if (p.img) {
-          mediaWrap.innerHTML = `<img src="${p.img}" class="w-full max-h-60 object-contain mx-auto" />`;
-          mediaWrap.classList.remove('hidden');
+        const initial = (post.nickname || 'น').trim().charAt(0).toUpperCase();
+        document.getElementById('detailAuthorInitial').textContent = initial;
+        document.getElementById('detailAuthorName').textContent = post.nickname;
+        document.getElementById('detailPostTime').textContent = post.time || '';
+
+        const imgWrap = document.getElementById('detailImageWrapper');
+        const imgEl = document.getElementById('detailImageEl');
+        if (post.image) {
+          imgEl.src = post.image;
+          imgWrap.classList.remove('hidden');
         } else {
-          mediaWrap.classList.add('hidden');
+          imgWrap.classList.add('hidden');
         }
 
-        const list = document.getElementById('commentsList');
-        list.innerHTML = '';
-        if (!p.comments || p.comments.length === 0) {
-          list.innerHTML = '<div class="text-xs text-slate-500 py-2 text-center">ยังไม่มีความคิดเห็น</div>';
+        const ytWrap = document.getElementById('detailYoutubeWrapper');
+        const ytIframe = document.getElementById('detailYoutubeIframe');
+        const ytId = extractYoutubeId(post.youtubeUrl || detectYoutubeUrlInText(post.text));
+        if (ytId) {
+          const embedSrc = `https://www.youtube.com/embed/${ytId}`;
+          if (ytIframe.src !== embedSrc) ytIframe.src = embedSrc;
+          ytWrap.classList.remove('hidden');
         } else {
-          p.comments.forEach((c, cIdx) => {
-            const div = document.createElement('div');
-            div.className = 'p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs flex items-start justify-between gap-2';
-            div.innerHTML = `
-              <div class="min-w-0 flex-1">
-                <span class="font-bold text-slate-300">${escapeHtml(c.nick)}:</span> 
-                <span class="text-slate-400">${escapeHtml(c.text)}</span>
+          ytIframe.src = 'about:blank';
+          ytWrap.classList.add('hidden');
+        }
+
+        const linkWrap = document.getElementById('detailLinkWrapper');
+        if (post.externalUrl) {
+          linkWrap.classList.remove('hidden');
+          linkWrap.innerHTML = `
+            <a href="${escapeHtml(post.externalUrl)}" target="_blank" rel="noopener noreferrer" class="p-3.5 rounded-2xl bg-indigo-50/80 hover:bg-indigo-100/80 border border-indigo-200 flex items-center justify-between gap-3 text-xs sm:text-sm font-semibold text-indigo-700 transition">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">🔗</span>
+                <span class="truncate">${escapeHtml(post.externalTitle || post.externalUrl)}</span>
               </div>
-              <button type="button" class="btn-del-c text-slate-500 hover:text-rose-400 font-bold px-1 shrink-0 transition" title="ลบความคิดเห็น (ต้องใช้รหัส 8888)">✕</button>
+              <span class="px-2.5 py-1 rounded-lg bg-white text-indigo-600 text-xs shrink-0 shadow-sm">เปิดลิงก์ ↗</span>
+            </a>
+          `;
+        } else {
+          linkWrap.classList.add('hidden');
+          linkWrap.innerHTML = '';
+        }
+
+        const textEl = document.getElementById('detailTextContent');
+        if (post.text) {
+          textEl.innerHTML = formatTextWithLinks(post.text);
+          textEl.className = 'text-sm sm:text-base text-slate-800 whitespace-pre-line leading-relaxed select-text';
+        } else {
+          textEl.innerHTML = '';
+          textEl.className = 'hidden';
+        }
+
+        document.getElementById('detailLikeCount').textContent = post.likes || 0;
+        document.getElementById('detailHeartCount').textContent = post.hearts || 0;
+        document.getElementById('detailCommentsCounter').textContent = `${post.comments.length} ความคิดเห็น`;
+
+        const listEl = document.getElementById('detailCommentsList');
+        listEl.innerHTML = '';
+
+        if (post.comments.length === 0) {
+          listEl.innerHTML = `
+            <div class="py-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              ยังไม่มีความคิดเห็นต่อท้าย ร่วมแสดงความคิดเห็นเป็นคนแรกได้เลย
+            </div>
+          `;
+        } else {
+          post.comments.forEach(comment => {
+            const item = document.createElement('div');
+            item.className = 'p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-start justify-between gap-2.5';
+            const cInit = (comment.nickname || 'น').trim().charAt(0).toUpperCase();
+            item.innerHTML = `
+              <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                  ${escapeHtml(cInit)}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-xs text-slate-900">${escapeHtml(comment.nickname)}</span>
+                    <span class="text-[10px] text-slate-400">${escapeHtml(comment.time || '')}</span>
+                  </div>
+                  <div class="text-xs sm:text-sm text-slate-700 mt-0.5 break-words leading-relaxed select-text">${formatTextWithLinks(comment.text)}</div>
+                </div>
+              </div>
+              <button type="button" class="btn-delete-comment p-1 rounded-lg text-slate-300 hover:text-rose-500 transition shrink-0" title="ลบความคิดเห็นนี้ (ต้องใช้รหัสผ่าน)">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             `;
-            div.querySelector('.btn-del-c').addEventListener('click', () => {
-              requestPinAndDelete(() => {
-                p.comments.splice(cIdx, 1);
-                saveState();
-                renderDetail();
-                render();
-                showToast('ลบคอมเมนต์เรียบร้อยแล้ว');
-              });
+            item.querySelector('.btn-delete-comment').addEventListener('click', () => {
+              requestPinProtectedDelete(
+                'ใส่รหัสผ่านเพื่อลบความคิดเห็น',
+                `กรุณาใส่รหัสผ่านเพื่อลบความคิดเห็นของ "${comment.nickname}"`,
+                () => {
+                  if (!Array.isArray(state.deletedIds)) state.deletedIds = [];
+                  state.deletedIds.push(comment.id);
+                  post.comments = post.comments.filter(c => c.id !== comment.id);
+                  post.updatedAtMs = Date.now();
+                  persistStatePermanently(post);
+                  renderNoteDetailModal(post.id);
+                  renderBoard();
+                  showToast('ลบความคิดเห็นเรียบร้อยแล้ว');
+                }
+              );
             });
-            list.appendChild(div);
+            listEl.appendChild(item);
           });
         }
       }
 
-      document.getElementById('btnAdd').addEventListener('click', openPostModal);
-      document.getElementById('btnEmptyAdd').addEventListener('click', openPostModal);
-      document.getElementById('btnClosePost').addEventListener('click', () => document.getElementById('modalPost').classList.add('hidden'));
-      document.getElementById('btnCancelPost').addEventListener('click', () => document.getElementById('modalPost').classList.add('hidden'));
+      // 6. Open Modal for Creating or Editing a Note
+      function openPostModal(existingPost = null, coords = null) {
+        editingPostId = existingPost ? existingPost.id : null;
+        spawnCoordinates = coords;
 
-      document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          selectedColor = btn.getAttribute('data-color');
-          document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('border-2', 'border-indigo-400', 'scale-110'));
-          btn.classList.add('border-2', 'border-indigo-400', 'scale-110');
+        document.getElementById('modalPostHeading').textContent = existingPost
+          ? 'แก้ไขโน้ตความคิดเห็น'
+          : `แปะโน้ตแสดงความคิดเห็น (ห้อง ${syncConfig.roomCode})`;
+
+        document.getElementById('inputNickname').value = existingPost
+          ? existingPost.nickname
+          : getSavedNickname();
+
+        document.getElementById('inputNoteText').value = existingPost
+          ? existingPost.text || ''
+          : '';
+
+        document.getElementById('inputImageUrl').value =
+          existingPost && existingPost.image && existingPost.image.startsWith('http')
+            ? existingPost.image
+            : '';
+
+        document.getElementById('inputYoutubeUrl').value = existingPost
+          ? existingPost.youtubeUrl || ''
+          : '';
+
+        document.getElementById('inputExternalUrl').value = existingPost
+          ? existingPost.externalUrl || ''
+          : '';
+
+        document.getElementById('inputExternalTitle').value = existingPost
+          ? existingPost.externalTitle || ''
+          : '';
+
+        selectedColor = existingPost ? existingPost.color || 'yellow' : 'yellow';
+        updateColorSwatchUI();
+
+        pendingImageDataUrl = existingPost ? existingPost.image || '' : '';
+        updateImagePreviewUI();
+
+        document.getElementById('modalPost').classList.remove('hidden');
+        setTimeout(() => {
+          const nickEl = document.getElementById('inputNickname');
+          const textEl = document.getElementById('inputNoteText');
+          if (!nickEl.value) nickEl.focus();
+          else textEl.focus();
+        }, 60);
+      }
+
+      function updateColorSwatchUI() {
+        document.querySelectorAll('.color-swatch').forEach(btn => {
+          const c = btn.getAttribute('data-color');
+          if (c === selectedColor) {
+            btn.classList.add('border-2', 'border-indigo-400', 'scale-110');
+          } else {
+            btn.classList.remove('border-2', 'border-indigo-400', 'scale-110');
+          }
         });
-      });
+      }
 
-      document.getElementById('inputImgFile').addEventListener('change', e => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-          activeImageBase64 = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-
-      document.getElementById('btnSubmitPost').addEventListener('click', () => {
-        const nick = userNickname;
-        const text = document.getElementById('inputText').value.trim();
-        const youtube = document.getElementById('inputYoutube').value.trim();
-
-        if (!text && !activeImageBase64 && !youtube) { 
-          showToast('กรุณากรอกข้อความ หรือแนบลิงก์ YouTube / รูปภาพ'); 
-          return; 
-        }
-
-        if (!state.posts) state.posts = [];
-        
-        const userPostId = 'post-' + Date.now();
-        state.posts.push({
-          id: userPostId,
-          nick,
-          text,
-          img: activeImageBase64,
-          youtube: youtube,
-          color: selectedColor,
-          likes: 0,
-          hearts: 0,
-          comments: [],
-          x: 40 + (state.posts.length % 3) * 310,
-          y: 40 + Math.floor(state.posts.length / 3) * 280,
-          time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
-        });
-
-        saveState();
-        render();
-        document.getElementById('modalPost').classList.add('hidden');
-        showToast('โพสต์ลงกระดานเรียบร้อยแล้ว');
-      });
-
-      document.getElementById('btnCloseDetail').addEventListener('click', () => document.getElementById('modalDetail').classList.add('hidden'));
-
-      document.getElementById('btnLike').addEventListener('click', (e) => {
-        const p = state.posts.find(item => item.id === activeDetailId);
-        if (p) {
-          p.likes = (p.likes || 0) + 1;
-          saveState();
-          renderDetail();
-          render();
-          triggerReactionAnimation('👍', e.currentTarget);
-        }
-      });
-
-      document.getElementById('btnHeart').addEventListener('click', (e) => {
-        const p = state.posts.find(item => item.id === activeDetailId);
-        if (p) {
-          p.hearts = (p.hearts || 0) + 1;
-          saveState();
-          renderDetail();
-          render();
-          triggerReactionAnimation('❤️', e.currentTarget);
-        }
-      });
-
-      document.getElementById('formComment').addEventListener('submit', e => {
-        e.preventDefault();
-        const p = state.posts.find(item => item.id === activeDetailId);
-        if (!p) return;
-        const nick = userNickname;
-        const text = document.getElementById('inputCText').value.trim();
-        if (!text) { showToast('กรุณากรอกข้อความความคิดเห็น'); return; }
-
-        if (!p.comments) p.comments = [];
-        p.comments.push({ nick, text });
-        saveState();
-        document.getElementById('inputCText').value = '';
-        renderDetail();
-        render();
-        showToast('บันทึกความคิดเห็นอัตโนมัติแล้ว');
-      });
-
-      document.getElementById('boardTitle').addEventListener('click', () => {
-        document.getElementById('setRoomInput').value = state.room;
-        document.getElementById('setTitleInput').value = state.title;
-        document.getElementById('modalSettings').classList.remove('hidden');
-      });
-      document.getElementById('btnCloseSettings').addEventListener('click', () => document.getElementById('modalSettings').classList.add('hidden'));
-      document.getElementById('btnSaveSettings').addEventListener('click', () => {
-        state.title = document.getElementById('setTitleInput').value.trim() || ('ห้องเรียนออนไลน์ (' + state.room + ')');
-        saveState();
-        render();
-        document.getElementById('modalSettings').classList.add('hidden');
-        showToast('บันทึกการตั้งค่าแล้ว');
-      });
-
-      document.getElementById('btnSave').addEventListener('click', () => {
-        saveState();
-        showToast('บันทึกข้อมูลเรียบร้อยแล้ว!');
-      });
-
-      document.getElementById('btnCancelPin').addEventListener('click', () => {
-        document.getElementById('modalPin').classList.add('hidden');
-        pendingDeleteCallback = null;
-      });
-
-      document.getElementById('btnConfirmPin').addEventListener('click', () => {
-        const pin = document.getElementById('inputPin').value;
-        if (pin === '8888') {
-          document.getElementById('modalPin').classList.add('hidden');
-          if (pendingDeleteCallback) pendingDeleteCallback();
-          pendingDeleteCallback = null;
+      function updateImagePreviewUI() {
+        const wrapper = document.getElementById('imagePreviewWrapper');
+        const img = document.getElementById('imagePreviewEl');
+        const fileInput = document.getElementById('inputImageFile');
+        if (pendingImageDataUrl) {
+          img.src = pendingImageDataUrl;
+          wrapper.classList.remove('hidden');
         } else {
-          showToast('❌ รหัสลับไม่ถูกต้อง (ต้องใช้ 8888)');
-          document.getElementById('inputPin').value = '';
-          document.getElementById('inputPin').focus();
+          wrapper.classList.add('hidden');
+          if (fileInput) fileInput.value = '';
         }
-      });
+      }
+
+      function copyTextSafe(text, msg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => fallbackCopy(text, msg));
+        } else {
+          fallbackCopy(text, msg);
+        }
+      }
+      function fallbackCopy(text, msg) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast(msg);
+        } catch (e) {}
+        ta.remove();
+      }
+
+      // 7. Bind All Interactive Controls & Dark Login Screen
+      function bindEvents() {
+        // Dark Login Screen Initialization & Submission
+        const loginOverlay = document.getElementById('loginScreenOverlay');
+        const loginRoomInput = document.getElementById('loginRoomInput');
+        const loginNicknameInput = document.getElementById('loginNicknameInput');
+        const loginErrorMsg = document.getElementById('loginErrorMsg');
+
+        loginRoomInput.value = syncConfig.roomCode || '101';
+        loginNicknameInput.value = getSavedNickname() || '';
+
+        document.getElementById('formDarkLogin').addEventListener('submit', async e => {
+          e.preventDefault();
+          const roomVal = (loginRoomInput.value || '').trim();
+          const nickVal = (loginNicknameInput.value || '').trim();
+
+          if (!roomVal || !nickVal) {
+            loginErrorMsg.classList.remove('hidden');
+            if (!roomVal) loginRoomInput.focus();
+            else loginNicknameInput.focus();
+            return;
+          }
+
+          loginErrorMsg.classList.add('hidden');
+          saveNickname(nickVal);
+          document.getElementById('inputNickname').value = nickVal;
+          document.getElementById('inputCommentNickname').value = nickVal;
+
+          loginOverlay.classList.add('hidden');
+          await switchRoom(roomVal);
+        });
+
+        // Re-open Dark Login Screen anytime via Header Button
+        document.getElementById('btnOpenLoginScreen').addEventListener('click', () => {
+          loginRoomInput.value = syncConfig.roomCode || '101';
+          loginNicknameInput.value = getSavedNickname() || '';
+          loginErrorMsg.classList.add('hidden');
+          loginOverlay.classList.remove('hidden');
+          setTimeout(() => loginRoomInput.focus(), 60);
+        });
+
+        document.getElementById('btnOpenNewPostModal').addEventListener('click', () => openPostModal());
+        document.getElementById('btnFloatingAdd').addEventListener('click', () => openPostModal());
+        document.getElementById('btnEmptyStateAdd').addEventListener('click', () => openPostModal());
+
+        // Quick Room Code Switch Form on Top Header
+        document.getElementById('formQuickRoomSwitch').addEventListener('submit', e => {
+          e.preventDefault();
+          const inputEl = document.getElementById('inputQuickRoomCode');
+          const newRoom = (inputEl.value || '').trim();
+          if (!newRoom) {
+            openBoardSettings();
+            return;
+          }
+          inputEl.value = '';
+          switchRoom(newRoom);
+        });
+
+        // "บันทึก" Button
+        document.getElementById('btnSyncStatusPill').addEventListener('click', async () => {
+          await persistStatePermanently();
+          await pullFromCloudRest();
+          showToast(`บันทึกข้อมูลห้อง "${syncConfig.roomCode}" ถาวรเรียบร้อยแล้ว (${state.posts.length} โพสต์)`);
+        });
+
+        // Double click anywhere on empty whiteboard canvas to spawn a note at that spot
+        document.getElementById('whiteboardSurface').addEventListener('dblclick', e => {
+          if (e.target.closest('article') || e.target.closest('button')) return;
+          const rect = document.getElementById('notesLayer').getBoundingClientRect();
+          const clickX = Math.max(20, Math.round(e.clientX - rect.left - 140));
+          const clickY = Math.max(20, Math.round(e.clientY - rect.top - 60));
+          openPostModal(null, { x: clickX, y: clickY });
+        });
+
+        const closePostModal = () => {
+          document.getElementById('modalPost').classList.add('hidden');
+        };
+        document.getElementById('btnClosePostModal').addEventListener('click', closePostModal);
+        document.getElementById('btnCancelPost').addEventListener('click', closePostModal);
+
+        // Color swatches
+        document.querySelectorAll('.color-swatch').forEach(btn => {
+          btn.addEventListener('click', () => {
+            selectedColor = btn.getAttribute('data-color');
+            updateColorSwatchUI();
+          });
+        });
+
+        // Image File Upload
+        document.getElementById('inputImageFile').addEventListener('change', async e => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          try {
+            pendingImageDataUrl = await compressImageFile(file);
+            document.getElementById('inputImageUrl').value = '';
+            updateImagePreviewUI();
+          } catch (err) {
+            showToast('ไม่สามารถอ่านไฟล์รูปภาพนี้ได้');
+          }
+        });
+
+        // Image URL Input
+        document.getElementById('inputImageUrl').addEventListener('input', e => {
+          const urlVal = (e.target.value || '').trim();
+          if (urlVal.startsWith('http')) {
+            pendingImageDataUrl = urlVal;
+            updateImagePreviewUI();
+          } else if (!urlVal && pendingImageDataUrl.startsWith('http')) {
+            pendingImageDataUrl = '';
+            updateImagePreviewUI();
+          }
+        });
+
+        document.getElementById('btnRemoveImage').addEventListener('click', () => {
+          pendingImageDataUrl = '';
+          document.getElementById('inputImageUrl').value = '';
+          updateImagePreviewUI();
+        });
+
+        // Save Note (Create or Update)
+        document.getElementById('btnSavePost').addEventListener('click', async () => {
+          const nickname = (document.getElementById('inputNickname').value || '').trim();
+          const text = (document.getElementById('inputNoteText').value || '').trim();
+          const ytUrlInput = (document.getElementById('inputYoutubeUrl').value || '').trim();
+          const extUrlInput = (document.getElementById('inputExternalUrl').value || '').trim();
+          const extTitleInput = (document.getElementById('inputExternalTitle').value || '').trim();
+
+          const finalImage = pendingImageDataUrl || detectImageUrlInText(text);
+          const finalYoutubeUrl = ytUrlInput || detectYoutubeUrlInText(text);
+
+          if (!nickname) {
+            showToast('กรุณาพิมพ์ชื่อเล่นของคุณ');
+            document.getElementById('inputNickname').focus();
+            return;
+          }
+          if (!text && !finalImage && !finalYoutubeUrl && !extUrlInput) {
+            showToast('กรุณาพิมพ์ข้อความ หรือแนบรูปภาพ / ลิงก์ YouTube / ลิงก์เว็บไซต์');
+            document.getElementById('inputNoteText').focus();
+            return;
+          }
+
+          saveNickname(nickname);
+          const nowMs = Date.now();
+          let savedPost = null;
+
+          if (editingPostId) {
+            const target = state.posts.find(p => p.id === editingPostId);
+            if (target) {
+              target.nickname = nickname;
+              target.text = text;
+              target.color = selectedColor;
+              target.image = finalImage;
+              target.youtubeUrl = finalYoutubeUrl;
+              target.externalUrl = extUrlInput;
+              target.externalTitle = extTitleInput;
+              target.updatedAtMs = nowMs;
+              savedPost = target;
+            }
+            showToast(`บันทึกการแก้ไขโน้ตในห้อง "${syncConfig.roomCode}" แล้ว`);
+          } else {
+            const idx = state.posts.length;
+            const cols = Math.max(1, Math.floor((window.innerWidth - 80) / 330));
+            const defaultX = 36 + (idx % cols) * 330;
+            const defaultY = 36 + Math.floor(idx / cols) * 320;
+
+            savedPost = {
+              id: 'note-' + nowMs + '-' + Math.random().toString(36).slice(2, 6),
+              nickname,
+              text,
+              image: finalImage,
+              youtubeUrl: finalYoutubeUrl,
+              externalUrl: extUrlInput,
+              externalTitle: extTitleInput,
+              color: selectedColor,
+              likes: 0,
+              hearts: 0,
+              comments: [],
+              x: spawnCoordinates ? spawnCoordinates.x : defaultX,
+              y: spawnCoordinates ? spawnCoordinates.y : defaultY,
+              createdAtMs: nowMs,
+              updatedAtMs: nowMs,
+              time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
+            };
+            state.posts.push(savedPost);
+            showToast(`แปะโน้ตลงในห้อง "${syncConfig.roomCode}" และบันทึกถาวรแล้ว`);
+          }
+
+          renderBoard();
+          closePostModal();
+          await persistStatePermanently(savedPost);
+        });
+
+        // Note Detail Modal interactions
+        const closeDetailModal = () => {
+          activeDetailPostId = null;
+          document.getElementById('detailYoutubeIframe').src = 'about:blank';
+          document.getElementById('modalNoteDetail').classList.add('hidden');
+        };
+        document.getElementById('btnCloseNoteDetail').addEventListener('click', closeDetailModal);
+        document.getElementById('modalNoteDetail').addEventListener('click', e => {
+          if (e.target.id === 'modalNoteDetail') closeDetailModal();
+        });
+
+        document.getElementById('detailImageEl').addEventListener('click', () => {
+          const src = document.getElementById('detailImageEl').src;
+          if (src) {
+            document.getElementById('lightboxImage').src = src;
+            document.getElementById('modalLightbox').classList.remove('hidden');
+          }
+        });
+
+        const btnDetailLike = document.getElementById('btnDetailLike');
+        btnDetailLike.addEventListener('click', () => {
+          const post = state.posts.find(p => p.id === activeDetailPostId);
+          if (!post) return;
+          post.likes = (post.likes || 0) + 1;
+          post.updatedAtMs = Date.now();
+          triggerReactionAnimation(btnDetailLike, 'like');
+          persistStatePermanently(post);
+          renderNoteDetailModal(post.id);
+          renderBoard();
+        });
+
+        const btnDetailHeart = document.getElementById('btnDetailHeart');
+        btnDetailHeart.addEventListener('click', () => {
+          const post = state.posts.find(p => p.id === activeDetailPostId);
+          if (!post) return;
+          post.hearts = (post.hearts || 0) + 1;
+          post.updatedAtMs = Date.now();
+          triggerReactionAnimation(btnDetailHeart, 'heart');
+          persistStatePermanently(post);
+          renderNoteDetailModal(post.id);
+          renderBoard();
+        });
+
+        document.getElementById('formAddComment').addEventListener('submit', e => {
+          e.preventDefault();
+          const post = state.posts.find(p => p.id === activeDetailPostId);
+          if (!post) return;
+
+          const nick = (document.getElementById('inputCommentNickname').value || '').trim();
+          const text = (document.getElementById('inputCommentText').value || '').trim();
+
+          if (!nick) {
+            showToast('กรุณาพิมพ์ชื่อเล่นก่อนแสดงความคิดเห็น');
+            document.getElementById('inputCommentNickname').focus();
+            return;
+          }
+          if (!text) {
+            showToast('กรุณาพิมพ์ข้อความความคิดเห็น');
+            document.getElementById('inputCommentText').focus();
+            return;
+          }
+
+          saveNickname(nick);
+          if (!Array.isArray(post.comments)) post.comments = [];
+          post.comments.push({
+            id: 'c-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
+            nickname: nick,
+            text,
+            time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
+          });
+          post.updatedAtMs = Date.now();
+
+          document.getElementById('inputCommentText').value = '';
+          persistStatePermanently(post);
+          renderNoteDetailModal(post.id);
+          renderBoard();
+          showToast('เพิ่มความคิดเห็นต่อท้ายเรียบร้อยแล้ว');
+        });
+
+        // Auto Arrange Grid
+        document.getElementById('btnArrangeGrid').addEventListener('click', () => {
+          if (!state.posts.length) return;
+          const cols = Math.max(1, Math.floor((window.innerWidth - 80) / 330));
+          const nowMs = Date.now();
+          state.posts.forEach((p, idx) => {
+            p.x = 36 + (idx % cols) * 330;
+            p.y = 36 + Math.floor(idx / cols) * 320;
+            p.updatedAtMs = nowMs;
+          });
+          persistStatePermanently();
+          renderBoard();
+          showToast('จัดเรียงโน้ตเป็นระเบียบแล้ว');
+        });
+
+        // Theme dots
+        document.querySelectorAll('.theme-dot').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.theme = btn.getAttribute('data-theme');
+            persistStatePermanently();
+            renderBoard();
+          });
+        });
+
+        // Edit Board Title & Room Switcher Modal
+        const openBoardSettings = () => {
+          document.getElementById('inputBoardTitle').value = state.boardTitle || '';
+          document.getElementById('inputBoardSubtitle').value = state.boardSubtitle || '';
+          document.getElementById('inputRoomCode').value = syncConfig.roomCode || '101';
+          document.getElementById('inputCloudDbUrl').value = syncConfig.cloudDbUrl || '';
+          renderRecentRoomPills();
+          document.getElementById('modalBoardSettings').classList.remove('hidden');
+        };
+        document.getElementById('btnEditBoardTitle').addEventListener('click', openBoardSettings);
+        document.getElementById('boardTitleText').addEventListener('click', openBoardSettings);
+        document.getElementById('btnOpenRoomModal').addEventListener('click', openBoardSettings);
+        document.getElementById('btnEmptyStateSwitchRoom').addEventListener('click', () => {
+          loginRoomInput.value = syncConfig.roomCode || '101';
+          loginNicknameInput.value = getSavedNickname() || '';
+          loginOverlay.classList.remove('hidden');
+        });
+        document.getElementById('btnCloseBoardModal').addEventListener('click', () => {
+          document.getElementById('modalBoardSettings').classList.add('hidden');
+        });
+
+        document.getElementById('btnCopyShareUrl').addEventListener('click', () => {
+          const roomVal = (document.getElementById('inputRoomCode').value || '101').trim();
+          const dbVal = (document.getElementById('inputCloudDbUrl').value || '').trim();
+          syncConfig.cloudDbUrl = dbVal;
+          switchRoom(roomVal);
+          const url = new URL(window.location.href);
+          url.searchParams.set('room', roomVal);
+          if (dbVal) url.searchParams.set('db', dbVal);
+          copyTextSafe(url.toString(), `คัดลอกลิงก์ห้อง "${roomVal}" สำหรับส่งให้สมาชิกในกลุ่มแล้ว!`);
+        });
+
+        document.getElementById('btnSaveBoardSettings').addEventListener('click', () => {
+          const t = (document.getElementById('inputBoardTitle').value || '').trim();
+          const s = (document.getElementById('inputBoardSubtitle').value || '').trim();
+          const rCode = (document.getElementById('inputRoomCode').value || '').trim() || '101';
+          const dbUrl = (document.getElementById('inputCloudDbUrl').value || '').trim();
+
+          syncConfig.cloudDbUrl = dbUrl;
+          const roomChanged = rCode !== syncConfig.roomCode;
+
+          if (roomChanged) {
+            switchRoom(rCode);
+          } else {
+            if (t) state.boardTitle = t;
+            state.boardSubtitle = s;
+            saveSyncConfig();
+            persistStatePermanently();
+            pullFromCloudRest();
+            renderBoard();
+            showToast(`บันทึกข้อมูลห้อง "${rCode}" เรียบร้อยแล้ว`);
+          }
+          document.getElementById('modalBoardSettings').classList.add('hidden');
+        });
+
+        document.getElementById('btnClearAllNotes').addEventListener('click', () => {
+          document.getElementById('modalBoardSettings').classList.add('hidden');
+          requestPinProtectedDelete(
+            'ใส่รหัสผ่านเพื่อล้างโน้ตในห้องนี้',
+            `กรุณาใส่รหัสผ่านเพื่อยืนยันการลบโน้ตทั้งหมดในห้อง "${syncConfig.roomCode}"`,
+            () => {
+              if (!Array.isArray(state.deletedIds)) state.deletedIds = [];
+              state.posts.forEach(p => {
+                state.deletedIds.push(p.id);
+                try {
+                  if (gunRoomNode) gunRoomNode.get('posts').get(p.id).put('DELETED');
+                } catch (err) {}
+              });
+              state.posts = [];
+              persistStatePermanently();
+              renderBoard();
+              showToast(`ล้างโน้ตทั้งหมดในห้อง "${syncConfig.roomCode}" แล้ว`);
+            }
+          );
+        });
+
+        // PIN 8888 Modal handlers
+        const closeDeletePinModal = () => {
+          pendingDeleteAction = null;
+          document.getElementById('modalDeletePin').classList.add('hidden');
+        };
+        document.getElementById('btnCloseDeletePin').addEventListener('click', closeDeletePinModal);
+        document.getElementById('btnCancelDeletePin').addEventListener('click', closeDeletePinModal);
+        document.getElementById('inputDeletePin').addEventListener('input', () => {
+          document.getElementById('deletePinError').classList.add('hidden');
+        });
+
+        document.getElementById('formDeletePin').addEventListener('submit', e => {
+          e.preventDefault();
+          const enteredPin = (document.getElementById('inputDeletePin').value || '').trim();
+          if (enteredPin === DELETE_PASSCODE) {
+            const action = pendingDeleteAction;
+            closeDeletePinModal();
+            if (typeof action === 'function') action();
+          } else {
+            document.getElementById('deletePinError').classList.remove('hidden');
+            document.getElementById('inputDeletePin').select();
+          }
+        });
+
+        // Lightbox close
+        document.getElementById('btnCloseLightbox').addEventListener('click', () => {
+          document.getElementById('modalLightbox').classList.add('hidden');
+        });
+        document.getElementById('modalLightbox').addEventListener('click', e => {
+          if (e.target.id === 'modalLightbox') {
+            document.getElementById('modalLightbox').classList.add('hidden');
+          }
+        });
+      }
+
+      // Initialize
+      bindEvents();
+      renderBoard();
+      hydrateRoomFromIndexedDB(syncConfig.roomCode);
+      initCrossDeviceSync();
     })();
   </script>
 </body>
