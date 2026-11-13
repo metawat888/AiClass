@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Classroom Whiteboard — กระดานแสดงความคิดเห็นออนไลน์</title>
+  <title>Ai Classroom — กระดานแสดงความคิดเห็นออนไลน์</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/gun@0.2020.1240/gun.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,12 +79,13 @@
       transition: none !important;
     }
 
-    /* Responsive Clean Grid Layout for Cards when in Grid Mode */
+    /* Responsive Clean Grid Layout for Cards — Extra bottom clearance so AILSED bottom dock never overlaps cards */
     .notes-grid-mode {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(305px, 1fr));
-      gap: 1.25rem;
+      gap: 1.5rem;
       align-items: start;
+      padding-bottom: 9.5rem !important;
     }
 
     @keyframes popIn {
@@ -153,12 +154,22 @@
 </head>
 <body class="min-h-screen flex flex-col select-none">
 
-  <!-- DARK LOGIN SCREEN OVERLAY (Matches Reference Image + Active Rooms Quick Selector) -->
-  <div id="loginScreenOverlay" class="fixed inset-0 z-50 login-bg-surface flex items-center justify-center p-4 overflow-y-auto">
+  <!-- DARK LOGIN SCREEN OVERLAY (Updated with Ai Classroom Book Bookmark Logo) -->
+  <div id="loginScreenOverlay" class="fixed inset-0 z-50 login-bg-surface flex items-center justify-center p-4 pb-28 overflow-y-auto">
     <div class="login-card-surface rounded-[28px] max-w-[500px] w-full p-7 sm:p-10 animate-pop my-auto">
-      <!-- Top Purple School Icon Badge -->
-      <div class="w-16 h-16 rounded-[20px] bg-gradient-to-br from-[#6e64ff] to-[#4f42e8] shadow-[0_10px_28px_rgba(102,93,245,0.5)] flex items-center justify-center mx-auto mb-5 text-3xl" title="Classroom Whiteboard">
-        🏫
+      <!-- Top Ai Classroom Book Bookmark Icon Badge (Matches Uploaded Image 1) -->
+      <div class="flex flex-col items-center justify-center mb-4">
+        <span class="text-xs font-extrabold tracking-[0.26em] text-[#38b2ac] uppercase mb-2.5">Ai Classroom</span>
+        <div class="w-16 h-16 rounded-[20px] bg-[#eaf4f4] border-2 border-[#38b2ac]/40 shadow-[0_10px_28px_rgba(20,184,166,0.28)] flex items-center justify-center" title="Ai Classroom">
+          <!-- Book with Bookmark Ribbon SVG matching image_006488.png -->
+          <svg class="w-9 h-9 text-slate-950" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 14C14 9.58172 17.5817 6 22 6H50V44H21C17.134 44 14 47.134 14 51V14Z" fill="currentColor"/>
+            <path d="M14 49C14 45.6863 16.6863 43 20 43H50V53H32M14 49C14 52.3137 16.6863 55 20 55H22M14 49V14" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M33 48H49" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M33 53H51" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M23 45H31V59L27 56L23 59V45Z" fill="#eaf4f4" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/>
+          </svg>
+        </div>
       </div>
 
       <!-- Heading & Subtitle -->
@@ -221,14 +232,21 @@
     </div>
   </div>
 
-  <!-- Minimal Floating Top Bar (Sleek Dark Glass Header) -->
-  <header class="sticky top-0 z-30 bg-[#0f1422]/90 backdrop-blur-xl border-b border-slate-800/90 px-4 sm:px-8 py-3">
+  <!-- Minimal Floating Top Bar (Sleek Dark Glass Header with Ai Classroom Book Logo & OUT Button) -->
+  <header class="sticky top-0 z-30 bg-[#0f1422]/95 backdrop-blur-xl border-b border-slate-800/90 px-4 sm:px-7 py-3">
     <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
 
-      <!-- Editable Board Title & Subtitle -->
+      <!-- Brand Logo (Ai Classroom Book Icon) + Editable Board Title -->
       <div class="flex items-center gap-3 min-w-0">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#665df5] to-[#4b3bf5] text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0 text-lg">
-          🏫
+        <div class="w-11 h-11 rounded-2xl bg-[#eaf4f4] border border-[#38b2ac]/50 flex flex-col items-center justify-center shadow-lg shadow-teal-500/15 shrink-0 px-1" title="Ai Classroom">
+          <span class="text-[6.5px] font-extrabold tracking-wider text-[#1d6f67] leading-none mb-0.5">Ai Classroom</span>
+          <svg class="w-6 h-6 text-slate-950" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 14C14 9.58172 17.5817 6 22 6H50V44H21C17.134 44 14 47.134 14 51V14Z" fill="currentColor"/>
+            <path d="M14 49C14 45.6863 16.6863 43 20 43H50V53H32M14 49C14 52.3137 16.6863 55 20 55H22M14 49V14" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M33 48H49" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M33 53H51" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M23 45H31V59L27 56L23 59V45Z" fill="#eaf4f4" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/>
+          </svg>
         </div>
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
@@ -250,10 +268,10 @@
         </div>
       </div>
 
-      <!-- Right Controls: Active User & Room Switcher, Save Button, Layout Mode, Theme, Add Note -->
-      <div class="flex items-center flex-wrap gap-2 sm:gap-2.5">
+      <!-- Right Controls: Active User, Room Switcher, Save, Theme, Arrange, Add Note, and OUT Button -->
+      <div class="flex items-center flex-wrap gap-2">
 
-        <!-- Active Student Badge + Open Login Screen to Switch Room/Nickname -->
+        <!-- Active Student Badge -->
         <button id="btnOpenLoginScreen" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition" title="คลิกเพื่อเปลี่ยนชื่อเล่นหรือเปลี่ยนรหัสห้องเรียน">
           <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
           <span id="activeStudentNameBadge">นักเรียน</span>
@@ -261,7 +279,7 @@
           <span class="text-indigo-400">สลับห้อง</span>
         </button>
 
-        <!-- Quick Room Code Entry Box (เข้าตามรหัสห้อง/กลุ่ม) -->
+        <!-- Quick Room Code Entry Box -->
         <form id="formQuickRoomSwitch" class="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700">
           <button id="btnOpenRoomModal" type="button" class="px-2.5 py-1 rounded-lg bg-slate-900 text-indigo-400 font-bold text-xs shadow-sm flex items-center gap-1 hover:bg-slate-950 transition" title="คลิกเพื่อเลือกหรือสลับกลุ่ม">
             <span>🔑 ห้อง:</span>
@@ -306,15 +324,23 @@
           </svg>
           <span>เพิ่มความคิดเห็น</span>
         </button>
+
+        <!-- Explicit "OUT" Button (ออกจากกระดานกลับไปหน้าเข้าสู่ห้องเรียน) -->
+        <button id="btnOutRoom" type="button" class="px-3.5 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 active:scale-95 text-white font-bold text-xs shadow-md shadow-rose-600/25 flex items-center gap-1.5 transition" title="ออกจากห้องเรียนนี้กลับไปหน้าเข้าสู่ห้องเรียน (OUT)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>OUT</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- Single Full-Screen Whiteboard Canvas -->
-  <main id="whiteboardSurface" class="whiteboard-canvas theme-dark flex-1 relative w-full min-h-[calc(100vh-65px)] overflow-auto">
+  <!-- Single Full-Screen Whiteboard Canvas (With Safe Bottom Spacer for AILSED Embedded Dock) -->
+  <main id="whiteboardSurface" class="whiteboard-canvas theme-dark flex-1 relative w-full min-h-[calc(100vh-65px)] pb-36 overflow-auto">
 
-    <!-- Empty State (Shown when there are 0 posts in this room — Zero Fake Data) -->
-    <div id="emptyBoardState" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+    <!-- Empty State (Raised above bottom dock so it never collides with AILSED navigation bar) -->
+    <div id="emptyBoardState" class="absolute inset-0 bottom-28 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
       <div class="bg-[#1c2230]/95 backdrop-blur-md border border-slate-700/80 rounded-3xl p-8 max-w-md shadow-2xl pointer-events-auto">
         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold mb-3">
           <span>🔑 รหัสห้องปัจจุบัน:</span>
@@ -338,22 +364,25 @@
       </div>
     </div>
 
-    <!-- Notes Layer -->
-    <div id="notesLayer" class="relative w-full max-w-[1600px] mx-auto min-h-[calc(100vh-65px)] p-4 sm:p-8 notes-grid-mode">
+    <!-- Notes Layer (With generous bottom padding so cards never touch the bottom edge or cover AILSED dock) -->
+    <div id="notesLayer" class="relative w-full max-w-[1600px] mx-auto min-h-[calc(100vh-180px)] p-4 sm:p-8 pb-40 notes-grid-mode">
       <!-- Dynamic sticky notes rendered here -->
     </div>
 
-    <!-- Floating Bottom-Right Quick Add Button -->
-    <button id="btnFloatingAdd" type="button" class="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#665df5] to-[#4b3bf5] hover:from-[#5848ff] hover:to-[#4335e0] text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition hover:scale-105 active:scale-95" title="เพิ่มความคิดเห็นใหม่">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <!-- Dedicated Bottom Safe-Zone Spacer so scrolling always leaves room for the embedded AILSED dock -->
+    <div class="h-28 w-full pointer-events-none" aria-hidden="true"></div>
+
+    <!-- Floating Quick Add Button (Positioned higher at bottom-24 so it stays clear of bottom edge / dock) -->
+    <button id="btnFloatingAdd" type="button" class="fixed bottom-24 right-6 z-20 w-13 h-13 p-3.5 rounded-2xl bg-gradient-to-br from-[#665df5] to-[#4b3bf5] hover:from-[#5848ff] hover:to-[#4335e0] text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition hover:scale-105 active:scale-95" title="เพิ่มความคิดเห็นใหม่">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
     </button>
   </main>
 
-  <!-- MODAL 1: Create / Edit Note on Whiteboard (Supports Text, Image Upload/URL, YouTube, External Links, Files) -->
-  <div id="modalPost" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#1c2230] text-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[92vh] overflow-y-auto">
+  <!-- MODAL 1: Create / Edit Note on Whiteboard (Raised above bottom edge for AILSED embed safety) -->
+  <div id="modalPost" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 pb-28">
+    <div class="bg-[#1c2230] text-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[82vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 id="modalPostHeading" class="text-base sm:text-lg font-bold text-white">แปะโน้ตแสดงความคิดเห็น</h3>
         <button id="btnClosePostModal" type="button" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
@@ -422,7 +451,7 @@
             </div>
             <div>
               <label for="inputExternalTitle" class="block text-[11px] font-semibold text-slate-300 mb-1">ชื่อปุ่มลิงก์ (ไม่บังคับ)</label>
-              <input id="inputExternalTitle" type="text" placeholder="เช่น เปิดสไลด์นำเสนอ / เอกสาร" class="w-full px-3 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+              <input id="inputExternalTitle" type="text" placeholder="เช่น ทำใบงาน 3 - 4" class="w-full px-3 py-2 rounded-xl bg-[#0c1018] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
             </div>
           </div>
         </div>
@@ -453,9 +482,9 @@
     </div>
   </div>
 
-  <!-- MODAL 2: Note Detail & Replies -->
-  <div id="modalNoteDetail" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-pop">
+  <!-- MODAL 2: Note Detail & Replies (Raised with pb-28 so bottom dock never blocks the reply box) -->
+  <div id="modalNoteDetail" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 pb-28">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[82vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-pop">
 
       <!-- Note Header inside Modal -->
       <div id="detailCardHeader" class="px-6 pt-5 pb-4 border-b border-black/5 flex items-start justify-between gap-3">
@@ -535,8 +564,8 @@
   </div>
 
   <!-- MODAL 3: Edit Board Title, Room Code Switcher & Cloud Settings -->
-  <div id="modalBoardSettings" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#1c2230] text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[92vh] overflow-y-auto">
+  <div id="modalBoardSettings" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 pb-28">
+    <div class="bg-[#1c2230] text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-700/80 animate-pop max-h-[82vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-base font-bold text-white">เข้ารหัสห้อง / ตั้งค่ากระดานกลุ่ม</h3>
         <button id="btnCloseBoardModal" type="button" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
@@ -595,17 +624,17 @@
   </div>
 
   <!-- MODAL 4: Fullscreen Image Lightbox -->
-  <div id="modalLightbox" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+  <div id="modalLightbox" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 pb-28">
+    <div class="relative max-w-4xl max-h-[82vh] flex flex-col items-center">
       <button id="btnCloseLightbox" type="button" class="absolute -top-10 right-0 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-semibold transition">
         ปิดรูปภาพ ✕
       </button>
-      <img id="lightboxImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="ภาพขยาย" class="max-w-full max-h-[82vh] rounded-2xl shadow-2xl object-contain bg-white" />
+      <img id="lightboxImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="ภาพขยาย" class="max-w-full max-h-[76vh] rounded-2xl shadow-2xl object-contain bg-white" />
     </div>
   </div>
 
   <!-- MODAL 5: PIN 8888 Confirmation Modal for Deleting Note Boxes -->
-  <div id="modalDeletePin" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="modalDeletePin" class="fixed inset-0 z-50 hidden bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 pb-28">
     <div class="bg-[#1c2230] text-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-700/80 animate-pop">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2.5">
@@ -647,8 +676,8 @@
     </div>
   </div>
 
-  <!-- Subtle Toast Container -->
-  <div id="toastArea" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <!-- Subtle Toast Container (Raised above bottom dock at bottom-24) -->
+  <div id="toastArea" class="fixed bottom-24 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <script>
     (function () {
@@ -682,7 +711,7 @@
           boardTitle: `กระดานแสดงความคิดเห็น (ห้อง ${roomCode})`,
           boardSubtitle: 'คลิกที่โน้ตเพื่อแสดงความคิดเห็นต่อ กดไลก์ กดหัวใจ แนบลิงก์ YouTube รูปภาพ หรือไฟล์ได้ครบครัน',
           theme: 'dark',
-          layoutMode: 'grid', // 'grid' (clean responsive layout) or 'freeform' (drag anywhere)
+          layoutMode: 'grid',
           cloudBlobId: '',
           updatedAt: 0,
           deletedIds: [],
@@ -726,7 +755,7 @@
             const parsed = JSON.parse(raw);
             if (parsed && parsed.roomCode) {
               if (!Array.isArray(parsed.recentRooms)) {
-                parsed.recentRooms = [parsed.roomCode, '101', 'กลุ่ม 1', 'กลุ่ม 2'];
+                parsed.recentRooms = [parsed.roomCode, '101', '3/1', 'กลุ่ม 1'];
               }
               return parsed;
             }
@@ -735,7 +764,7 @@
         return {
           roomCode: '101',
           cloudDbUrl: '',
-          recentRooms: ['101', 'กลุ่ม 1', 'กลุ่ม 2', 'กลุ่ม 3']
+          recentRooms: ['101', '3/1', 'กลุ่ม 1', 'กลุ่ม 2']
         };
       }
 
@@ -759,7 +788,6 @@
         return LS_ROOM_PREFIX + String(roomCode || '101').trim().toUpperCase();
       }
 
-      //Deterministic hex topic name for ntfy.sh so Thai/special characters in room codes work 100% reliably
       function getNtfyTopicForRoom(roomCode) {
         const clean = String(roomCode || '101').trim().toUpperCase();
         let hex = '';
@@ -769,7 +797,7 @@
         return 'cb_v5_room_' + hex.slice(0, 40);
       }
 
-      // 1. Bulletproof Multi-Layer Persistence (NEVER overwrites before reading!)
+      // 1. Bulletproof Multi-Layer Persistence
       function loadRoomFromLocalStorage(roomCode) {
         const key = getRoomStorageKey(roomCode);
         try {
@@ -851,7 +879,6 @@
         }
       }
 
-      // FIXED switchRoom: Never saves an unhydrated or wrong room over the target room!
       async function switchRoom(newRoomCode) {
         const cleanCode = (newRoomCode || '').trim() || '101';
         syncConfig.roomCode = cleanCode;
@@ -861,13 +888,11 @@
         activeDetailPostId = null;
         document.getElementById('modalNoteDetail').classList.add('hidden');
 
-        // Load from LocalStorage first, then merge from IndexedDB, then pull from Cloud!
         state = loadRoomFromLocalStorage(cleanCode);
         renderBoard();
         await hydrateRoomFromIndexedDB(cleanCode);
         renderBoard();
 
-        // Connect live cloud streams for this room
         subscribeGunRoom();
         subscribeNtfyRoomStream(cleanCode);
         await pullFromCloudAllEngines();
@@ -1012,7 +1037,7 @@
         broadcastStateToCloud(changedPost);
       }
 
-      // 2. Multi-Engine Cross-Device Cloud Sync (ntfy.sh Cloud Event Log + JSONBlob + Gun + REST)
+      // 2. Multi-Engine Cross-Device Cloud Sync
       function initCrossDeviceSync() {
         try {
           if (window.Gun) {
@@ -1045,7 +1070,6 @@
         setInterval(pullFromCloudAllEngines, 6000);
       }
 
-      // Real-time Server-Sent Events (SSE) stream via ntfy.sh so other devices update in <1 sec!
       function subscribeNtfyRoomStream(roomCode) {
         try {
           if (ntfyEventSource) {
@@ -1120,7 +1144,6 @@
             });
             if (res.ok) return state.cloudBlobId;
           }
-          // Create new blob if none exists yet
           const createRes = await fetch('https://jsonblob.com/api/jsonBlob', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -1184,7 +1207,6 @@
       async function pullFromCloudAllEngines() {
         const activeRoom = syncConfig.roomCode;
 
-        // 1. Pull cached message history from ntfy.sh (works across all devices & browsers with zero config!)
         try {
           const topic = getNtfyTopicForRoom(activeRoom);
           const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=all`);
@@ -1210,7 +1232,6 @@
           }
         } catch (e) {}
 
-        // 2. Pull from custom Firebase / REST DB if configured
         const endpoint = getRestEndpointUrl();
         if (endpoint) {
           try {
@@ -1225,7 +1246,6 @@
           } catch (e) {}
         }
 
-        // 3. Pull from Vercel /api/board if hosted on Vercel
         if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('googleusercontent')) {
           try {
             const roomSafe = encodeURIComponent((syncConfig.roomCode || '101').trim().toUpperCase());
@@ -1244,7 +1264,6 @@
       async function broadcastStateToCloud(changedPost) {
         const topic = getNtfyTopicForRoom(syncConfig.roomCode);
 
-        // 1. Send lightweight post event immediately to ntfy.sh so text/links/likes/comments sync in <1 sec
         if (changedPost && changedPost.id) {
           try {
             const lightPost = Object.assign({}, changedPost);
@@ -1262,7 +1281,6 @@
           } catch (e) {}
         }
 
-        // 2. Sync full state (including base64 uploaded images & deletions) to JSONBlob & announce blobId on ntfy.sh
         try {
           const blobId = await pushToJsonBlob();
           if (blobId) {
@@ -1287,14 +1305,12 @@
           }
         } catch (e) {}
 
-        // 3. Push to Gun.js
         try {
           if (gunRoomNode && changedPost && changedPost.id) {
             gunRoomNode.get('posts').get(changedPost.id).put(JSON.stringify(changedPost));
           }
         } catch (e) {}
 
-        // 4. Push to Firebase / REST DB if configured
         const serialized = JSON.stringify(state);
         const endpoint = getRestEndpointUrl();
         if (endpoint) {
@@ -1307,7 +1323,6 @@
           } catch (e) {}
         }
 
-        // 5. Push to Vercel /api/board if hosted on Vercel
         if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('googleusercontent')) {
           try {
             const roomSafe = encodeURIComponent((syncConfig.roomCode || '101').trim().toUpperCase());
@@ -1536,7 +1551,7 @@
         });
       }
 
-      // 4. Render Whiteboard & Notes
+      // 4. Render Whiteboard & Notes (With Bottom Safe Margin so cards never touch bottom edge or cover AILSED dock)
       function renderBoard() {
         document.getElementById('boardTitleText').textContent = state.boardTitle || `กระดานแสดงความคิดเห็น (ห้อง ${syncConfig.roomCode})`;
         document.getElementById('boardSubtitleText').textContent = state.boardSubtitle || '';
@@ -1551,7 +1566,7 @@
         }
 
         const surface = document.getElementById('whiteboardSurface');
-        surface.className = 'whiteboard-canvas flex-1 relative w-full min-h-[calc(100vh-65px)] overflow-auto';
+        surface.className = 'whiteboard-canvas flex-1 relative w-full min-h-[calc(100vh-65px)] pb-36 overflow-auto';
         const activeTheme = state.theme || 'dark';
         if (activeTheme !== 'default') {
           surface.classList.add(`theme-${activeTheme}`);
@@ -1571,9 +1586,17 @@
         const useGridMode = isMobile || state.layoutMode !== 'freeform';
 
         if (useGridMode) {
-          notesLayer.className = 'relative w-full max-w-[1600px] mx-auto min-h-[calc(100vh-65px)] p-4 sm:p-8 notes-grid-mode';
+          notesLayer.className = 'relative w-full max-w-[1600px] mx-auto min-h-[calc(100vh-180px)] p-4 sm:p-8 pb-40 notes-grid-mode';
+          notesLayer.style.minHeight = '';
         } else {
-          notesLayer.className = 'relative w-full min-h-[calc(100vh-65px)] p-4 sm:p-8';
+          notesLayer.className = 'relative w-full p-4 sm:p-8 pb-44';
+          // Calculate dynamic height with generous 160px bottom buffer so freeform cards never touch bottom edge
+          let maxCardBottom = 560;
+          state.posts.forEach((p, idx) => {
+            const py = typeof p.y === 'number' ? p.y : 36 + Math.floor(idx / 4) * 320;
+            if (py + 520 > maxCardBottom) maxCardBottom = py + 520;
+          });
+          notesLayer.style.minHeight = `${maxCardBottom + 160}px`;
         }
 
         state.posts.forEach((post, idx) => {
@@ -1585,7 +1608,7 @@
           const colorCls = getCardStyle(post.color);
 
           if (useGridMode) {
-            card.className = `note-card w-full rounded-3xl border-2 ${colorCls} p-5 flex flex-col animate-pop`;
+            card.className = `note-card w-full rounded-3xl border-2 ${colorCls} p-5 mb-2 flex flex-col animate-pop`;
           } else {
             const x = typeof post.x === 'number' ? post.x : 36 + (idx % 4) * 330;
             const y = typeof post.y === 'number' ? post.y : 36 + Math.floor(idx / 4) * 320;
@@ -1632,7 +1655,7 @@
               ${
                 post.image
                   ? `<div class="mb-3 rounded-2xl overflow-hidden border border-black/5 bg-white/60">
-                       <img src="${escapeHtml(post.image)}" alt="รูปภาพประกอบ" class="note-image w-full max-h-52 object-cover group-hover:scale-[1.01] transition" />
+                       <img src="${escapeHtml(post.image)}" alt="รูปภาพประกอบ" class="note-image w-full max-h-48 object-cover group-hover:scale-[1.01] transition" />
                      </div>`
                   : ''
               }
@@ -1792,6 +1815,7 @@
             postObj.y = parseInt(cardEl.style.top, 10) || 24;
             postObj.updatedAtMs = Date.now();
             persistStatePermanently(postObj);
+            renderBoard();
           } else if (!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('iframe')) {
             openNoteDetailModal(postObj.id);
           }
@@ -2032,7 +2056,7 @@
         ta.remove();
       }
 
-      // 7. Bind All Interactive Controls & Dark Login Screen
+      // 7. Bind All Interactive Controls, Login Screen & OUT Button
       function bindEvents() {
         const loginOverlay = document.getElementById('loginScreenOverlay');
         const loginRoomInput = document.getElementById('loginRoomInput');
@@ -2043,10 +2067,18 @@
         loginNicknameInput.value = getSavedNickname() || '';
         renderLoginSavedRoomChips();
 
-        // If user already has an active session in this browser (e.g. refreshed or came back), go straight to their board so posts are immediately visible!
         if (hasActiveSession()) {
           loginOverlay.classList.add('hidden');
         }
+
+        const openDarkLoginScreen = () => {
+          loginRoomInput.value = syncConfig.roomCode || '101';
+          loginNicknameInput.value = getSavedNickname() || '';
+          loginErrorMsg.classList.add('hidden');
+          renderLoginSavedRoomChips();
+          loginOverlay.classList.remove('hidden');
+          setTimeout(() => loginRoomInput.focus(), 60);
+        };
 
         document.getElementById('formDarkLogin').addEventListener('submit', async e => {
           e.preventDefault();
@@ -2069,14 +2101,16 @@
           await switchRoom(roomVal);
         });
 
-        // Re-open Dark Login Screen anytime via Header Button
-        document.getElementById('btnOpenLoginScreen').addEventListener('click', () => {
-          loginRoomInput.value = syncConfig.roomCode || '101';
-          loginNicknameInput.value = getSavedNickname() || '';
-          loginErrorMsg.classList.add('hidden');
-          renderLoginSavedRoomChips();
-          loginOverlay.classList.remove('hidden');
-          setTimeout(() => loginRoomInput.focus(), 60);
+        // Re-open Dark Login Screen via Student Badge or "OUT" Button
+        document.getElementById('btnOpenLoginScreen').addEventListener('click', openDarkLoginScreen);
+
+        document.getElementById('btnOutRoom').addEventListener('click', async () => {
+          await saveLocalOnly();
+          try {
+            localStorage.removeItem(LS_ACTIVE_SESSION_KEY);
+          } catch (e) {}
+          openDarkLoginScreen();
+          showToast(`ออกจากห้อง "${syncConfig.roomCode}" กลับสู่หน้าเข้าสู่ห้องเรียนแล้ว`);
         });
 
         document.getElementById('btnOpenNewPostModal').addEventListener('click', () => openPostModal());
@@ -2313,7 +2347,7 @@
         document.getElementById('btnArrangeGrid').addEventListener('click', () => {
           if (state.layoutMode === 'freeform') {
             state.layoutMode = 'grid';
-            showToast('ปรับเป็นโหมดจัดเรียงการ์ดอัตโนมัติ (Grid สวยงาม)');
+            showToast('ปรับเป็นโหมดจัดเรียงการ์ดอัตโนมัติ (ไม่บังแถบเมนูด้านล่าง)');
           } else {
             state.layoutMode = 'freeform';
             const cols = Math.max(1, Math.floor((window.innerWidth - 80) / 330));
@@ -2348,12 +2382,7 @@
         document.getElementById('btnEditBoardTitle').addEventListener('click', openBoardSettings);
         document.getElementById('boardTitleText').addEventListener('click', openBoardSettings);
         document.getElementById('btnOpenRoomModal').addEventListener('click', openBoardSettings);
-        document.getElementById('btnEmptyStateSwitchRoom').addEventListener('click', () => {
-          loginRoomInput.value = syncConfig.roomCode || '101';
-          loginNicknameInput.value = getSavedNickname() || '';
-          renderLoginSavedRoomChips();
-          loginOverlay.classList.remove('hidden');
-        });
+        document.getElementById('btnEmptyStateSwitchRoom').addEventListener('click', openDarkLoginScreen);
         document.getElementById('btnCloseBoardModal').addEventListener('click', () => {
           document.getElementById('modalBoardSettings').classList.add('hidden');
         });
